@@ -65,6 +65,11 @@ const tiles = splitImageTiles(images.length)
 <style lang="scss">
   @use '@styles/functions/fluid' as *;
   @use '@styles/functions/media' as *;
+  @use '@styles/functions/animate' as *;
+
+  .split-container {
+    overflow: clip;
+  }
 
   .split {
     display: grid;
@@ -76,6 +81,41 @@ const tiles = splitImageTiles(images.length)
 
       &[data-align='left'] .images {
         order: -1;
+      }
+    }    
+
+    @include shouldAnimate() {
+      --progress: min(calc(var(--viewProgress, 0) + 0.2), 1);
+      --movement: 50%;
+
+      .text {
+        opacity: var(--viewProgress, 0);
+      }
+
+      &[data-align='left'] .text {
+        transform: translateX(calc((1 - var(--progress, 0)) * var(--movement)));
+      }
+
+      &[data-align='right'] .text {
+        transform: translateX(calc(-1 * (1 - var(--progress, 0)) * var(--movement)));
+      }
+      
+      :global(img) {      
+        --scale: 1.2;
+        --rotate: 8deg;
+
+        &:nth-child(1),
+        &:nth-child(4) {
+          --rotation: calc(-1 * var(--rotate) + (var(--rotate) * var(--progress, 0)));
+        }
+
+        &:nth-child(2),
+        &:nth-child(3) {
+          --rotation: calc(var(--rotate) - (var(--rotate) * var(--progress, 0)));
+        }
+
+        opacity: calc(var(--progress, 0) + 0.2);
+        transform: scale(calc(1.2 - (var(--progress, 0) * 0.2))) rotate(var(--rotation, 0deg));
       }
     }
   }
@@ -96,7 +136,7 @@ const tiles = splitImageTiles(images.length)
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: 1fr;
-    gap: #{fluid(8, 12)};
+    gap: #{fluid(12, 24)};
     aspect-ratio: 1;
   }
 

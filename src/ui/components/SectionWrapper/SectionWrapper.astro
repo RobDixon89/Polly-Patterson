@@ -111,7 +111,7 @@ import { BACKGROUND_TINT_DEFAULT, BACKGROUND_TINTS, SECTION_THEMES, type Backgro
       // 100% once the centre reaches the screen's centre or the whole section is on screen, whichever comes first, so
       // a section that fits on screen (like a banner under the sticky header) reaches 100% without more scrolling
       const view = { centre: 0, whole: 0 }
-      const updateView = () => section.style.setProperty('--viewProgress', percent(Math.max(view.centre, view.whole)))
+      const updateView = () => section.style.setProperty('--viewProgress', String(Math.max(view.centre, view.whole)))
       scroll((value: number) => ((view.centre = value), updateView()), { target: section, offset: ['start end', 'center center'] })
       scroll((value: number) => ((view.whole = value), updateView()), { target: section, offset: ['start end', 'end end'] })
 
@@ -216,7 +216,7 @@ import { BACKGROUND_TINT_DEFAULT, BACKGROUND_TINTS, SECTION_THEMES, type Backgro
   document.addEventListener('storyblok-live-preview-updated', resync)
 </script>
 
-<style lang="scss">  
+<style lang="scss">
   @use '@styles/functions/animate' as *;
 
   .section {
