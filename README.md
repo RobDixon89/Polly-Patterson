@@ -10,7 +10,8 @@ An Astro site on Storyblok, with schemas in code, block adapters that map Storyb
 3. For the Visual Editor, the dev server needs HTTPS. Create a trusted certificate with
    [mkcert](https://github.com/FiloSottile/mkcert) and save it as `certs/localhost.crt` and `certs/localhost.pem`:
    `mkcert -install` then `mkcert -cert-file certs/localhost.crt -key-file certs/localhost.pem localhost`.
-   Without them the dev server runs over HTTP.
+   Without them the dev server runs over HTTP; `DEV_HTTP=1` forces HTTP even with them (for tools that don't trust the
+   certificate).
 4. In Storyblok, set **Settings → Visual Editor → Location** to `https://localhost:4321/`.
 5. `pnpm astro dev --background` (manage it with `astro dev stop | status | logs`).
 
@@ -23,7 +24,7 @@ An Astro site on Storyblok, with schemas in code, block adapters that map Storyb
 | `pnpm cms:strings [--space <id>]` | Adds keys from `src/i18n/en_GB.json` to the `strings` datasource, removes deleted ones (never edits values) |
 | `pnpm test`                       | Unit tests (`node --test`)                                                                                  |
 | `pnpm check`                      | Type-checks the project (`astro check`)                                                                     |
-| `pnpm storybook`                  | Storybook for the UI components                                                                             |
+| `pnpm storybook`                  | Storybook for the UI components; story images are in `public/img`                                           |
 
 ## Structure
 
@@ -47,14 +48,14 @@ src/
 
 ## Content model
 
-| Story                | Content type      | Holds                                                                                                         |
-| -------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `home`, `about`, …   | `page`            | A Banner field (one `home_hero` or `inner_hero`) and a free area (`body`)                                     |
-| `blog/` (start page) | `blog_listing`    | Title, optional description and image for the inner hero; lists the folder's articles, 9 per page (`?page=2`) |
-| `blog/<slug>`        | `blog_article`    | Title, description, image, published date, external URL, free area (hidden when the external URL is set)      |
-| `global/settings`    | `global_settings` | Header links, footer links, social URLs, copyright (`{year}` is replaced)                                     |
+| Story               | Content type      | Holds                                                                                                         |
+| ------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `home`, `about`, …  | `page`            | A Banner field (one `home_hero` or `inner_hero`) and a free area (`body`)                                     |
+| `articles/` (start) | `article_listing` | Title, optional description and image for the inner hero; lists the folder's articles, 9 per page (`?page=2`) |
+| `articles/<slug>`   | `article`         | Title, description, image, published date, external URL, free area (hidden when the external URL is set)      |
+| `global/settings`   | `global_settings` | Header links, footer links, social URLs, copyright (`{year}` is replaced)                                     |
 
-Every section and banner has `anchor_id` and `theme` (light / dark), from `sectionFields()`. Rich text in the Rich Text
+Every section and banner has `anchor_id`, `theme` (light / dark) and `background_image`, from `sectionFields()`. `SectionWrapper` fills the section with the background image (`object-fit: cover`, under a tint of the theme colour), cropped per device by `FULL_SCREEN_SOURCES` in `src/ui/devices.ts`. Rich text in the Rich Text
 section offers H2–H6, bold, italic, quote, rule, links, lists and the H1–H6, Large, Default, Small and Extra small styles; banner
 introductions use the reduced set (bold, italic, links, the body sizes).
 
@@ -78,4 +79,3 @@ Add a key only when a component needs it, then run `pnpm cms:strings`.
 ## Not done yet
 
 - No deployment adapter: `astro build` needs one (e.g. `@astrojs/node`) before this goes anywhere.
-- The header has no mobile menu: the links wrap.

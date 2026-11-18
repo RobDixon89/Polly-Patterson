@@ -1,0 +1,20 @@
+---
+import { StoryblokRichText, type StoryblokAstroRichTextProps } from '@storyblok/astro'
+
+// A paragraph whose text all has the same style option (e.g. "Large") gets the class itself, so the style sizes the
+// whole paragraph, line height included, rather than an inline span.
+type Props = StoryblokAstroRichTextProps<'paragraph'>
+
+const { content = [], context } = Astro.props
+
+type Mark = { type: string; attrs?: { class?: string } }
+const styleOf = (node: { marks?: Mark[] }) => node.marks?.find((mark) => mark.type === 'styled')?.attrs?.class
+const text = content.filter((node) => node.type === 'text') as Array<{ marks?: Mark[] }>
+const shared = text.length && text.length === content.length ? styleOf(text[0]) : undefined
+const whole = shared && text.every((node) => styleOf(node) === shared) ? shared : undefined
+const children = whole
+  ? content.map((node) => ({ ...node, marks: (node as { marks?: Mark[] }).marks?.filter((mark) => mark.type !== 'styled') }))
+  : content
+---
+
+<p class={whole}><StoryblokRichText document={children as never} {...context} /></p>

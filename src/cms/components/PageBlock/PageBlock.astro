@@ -1,0 +1,14 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import { StoryblokBlock, type BlockExtraProps } from '../../storyblok'
+import type { Page } from '../../types/gen/components/storyblok-components'
+
+type Props = StoryblokBlockComponentProps<Page, BlockExtraProps>
+
+const { block, editable, url } = Astro.props
+---
+
+<div {...editable}>
+  {block.banner?.slice(0, 1).map((banner) => <StoryblokBlock block={banner} url={url} />)}
+  {block.body?.map((section) => <StoryblokBlock block={section} url={url} />)}
+</div>

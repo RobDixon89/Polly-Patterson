@@ -1,0 +1,62 @@
+---
+import type { ImageSource } from '../../devices'
+import type { ImageModel } from '../../types'
+import { croppableWidth, imageWidths } from './imageWidths'
+
+// A Storyblok image through the Image Service: resized per width (WebP where supported), cropped to `ratio` around
+// the editor's focal point when one is given. `minWidth`, `maxWidth` and `steps` set the generated widths: `steps`
+// widths evenly spaced from min to max, never past the original's width. `sources` (e.g. `FULL_SCREEN_SOURCES` from
+// ui/devices.ts) gives each screen size its own crop and widths in a <picture>. Images from anywhere else (the
+// stories' /img files) are used as they are.
+type Props = {
+  image: ImageModel
+  /** Crop to this width / height ratio, e.g. `[16, 9]` */
+  ratio?: readonly [number, number]
+  sizes?: string
+  /** The smallest generated width in px (default 480) */
+  minWidth?: number
+  /** The largest generated width in px (default 2560) */
+  maxWidth?: number
+  /** How many widths to generate (default 6) */
+  steps?: number
+  /** Per-screen crops and widths, smallest screen first; the last has no `media` and is the fallback */
+  sources?: readonly ImageSource[]
+  loading?: 'lazy' | 'eager'
+  class?: string
+}
+
+const { image, sizes = '100vw', sources, loading = 'lazy', class: className, ...base } = Astro.props
+const isStoryblok = /^https:\/\/a\.storyblok\.com\//.test(image.src)
+
+// One source's URLs: its widths, cropped to its ratio around the focal point
+const build = ({ ratio, minWidth, maxWidth, steps }: ImageSource) => {
+  const widths = imageWidths({ min: minWidth, max: maxWidth, steps, original: croppableWidth(image, ratio) })
+  const height = (width: number) => (ratio ? Math.round((width * ratio[1]) / ratio[0]) : 0)
+  const filters = ratio && image.focus ? `/filters:focal(${image.focus})` : ''
+  const url = (width: number) => `${image.src}/m/${width}x${height(width)}${filters}`
+  const largest = widths.at(-1)!
+  return {
+    src: url(largest),
+    srcset: widths.map((w) => `${url(w)} ${w}w`).join(', '),
+    width: largest,
+    height: ratio ? height(largest) : image.width && image.height ? Math.round((largest * image.height) / image.width) : undefined,
+  }
+}
+
+const fallback = isStoryblok ? build(sources?.at(-1) ?? base) : { src: image.src, width: image.width, height: image.height }
+const extra = isStoryblok ? (sources?.slice(0, -1) ?? []) : []
+---
+
+{
+  extra.length ? (
+    <picture>
+      {extra.map((source) => {
+        const { srcset, width, height } = build(source)
+        return <source media={source.media} srcset={srcset} sizes={sizes} width={width} height={height} />
+      })}
+      <img {...fallback} sizes={sizes} alt={image.alt} loading={loading} decoding="async" class={className} />
+    </picture>
+  ) : (
+    <img {...fallback} sizes={'srcset' in fallback ? sizes : undefined} alt={image.alt} loading={loading} decoding="async" class={className} />
+  )
+}

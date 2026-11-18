@@ -1,0 +1,64 @@
+---
+import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import type { ImageModel, SectionTheme } from '../../types'
+import RichText from '../RichText/RichText.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// The inner pages' banner: the page title over an optional background image (SectionWrapper's, tinted for contrast).
+// Used by the Inner Hero block and, with the story's own fields, the article listing and articles.
+type Props = {
+  title: string
+  /** Rich text introduction (the Inner Hero block) */
+  introduction?: StoryblokRichtext
+  /** Plain text introduction (article listing and article descriptions) */
+  description?: string
+  /** A short line above the title, e.g. an article's date */
+  eyebrow?: string
+  backgroundImage?: ImageModel
+  theme?: SectionTheme
+  id?: string
+  [attr: string]: unknown
+}
+
+const { title, introduction, description, eyebrow, backgroundImage, theme, id, ...attrs } = Astro.props
+---
+
+<SectionWrapper as="header" id={id} theme={theme} layout="full-width" backgroundImage={backgroundImage} eager class="hero" {...attrs}>
+  <div class="site-wide body">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1>{title}</h1>
+    <RichText document={introduction} class="introduction" />
+    {description && <p class="introduction">{description}</p>}
+  </div>
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .hero {
+    display: grid;
+    align-items: end;
+    min-block-size: #{fluid(320, 520)};
+  }
+
+  .body {
+    padding-block: var(--sectionSpacing);
+
+    > :global(*) {
+      max-inline-size: 900px;
+    }
+  }
+
+  .eyebrow {
+    @include body-sm;
+    margin-block-end: 0.25em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .hero :global(.introduction) {
+    @include body-lg;
+    margin-block-start: #{fluid(16, 24)};
+  }
+</style>

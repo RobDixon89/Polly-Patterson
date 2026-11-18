@@ -1,0 +1,120 @@
+---
+import type { LinkModel } from '../../types'
+
+// The site footer: a link list, the social links and the copyright line.
+export type SocialNetwork = 'twitter' | 'instagram' | 'youtube'
+
+type Props = {
+  links: LinkModel[]
+  /** Each network's address and accessible name; networks without an address are left out */
+  social: Array<{ network: SocialNetwork; href: string; label: string }>
+  copyright?: string
+  navLabel: string
+  socialLabel: string
+  [attr: string]: unknown
+}
+
+const { links, social, copyright, navLabel, socialLabel, ...attrs } = Astro.props
+
+// Simple line icons, drawn in the text colour
+const ICONS: Record<SocialNetwork, string> = {
+  twitter: 'M4 4l16 16M20 4L4 20',
+  instagram: 'M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zM12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM17.5 6.5h.01',
+  youtube: 'M3 8a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zM10 9v6l5-3z',
+}
+---
+
+<footer class="footer" data-section-theme="dark" {...attrs}>
+  <div class="site-wide inner">
+    {
+      links.length > 0 && (
+        <nav aria-label={navLabel}>
+          <ul class="links">
+            {links.map((link) => (
+              <li>
+                <a href={link.href} target={link.target}>{link.text}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+    {
+      social.length > 0 && (
+        <ul class="social" aria-label={socialLabel}>
+          {social.map(({ network, href, label }) => (
+            <li>
+              <a href={href} aria-label={label} rel="noopener">
+                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                  <path d={ICONS[network]} fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {copyright && <p class="copyright">{copyright}</p>}
+  </div>
+</footer>
+
+<style lang="scss">
+  @use '@styles/functions/animate' as *;
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/content-styles' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .footer {
+    background-color: var(--bgColour);
+    color: var(--fgColour);
+  }
+
+  .inner {
+    display: grid;
+    gap: #{fluid(24, 32)};
+    padding-block: #{fluid(40, 64)};
+    justify-content: center;
+    text-align: center;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .links {
+    gap: 0.5rem #{fluid(16, 32)};
+
+    a {
+      @include underline-on-hover(4px);
+    }
+  }
+
+  .social {
+    gap: 0.5rem;
+
+    a {
+      display: grid;
+      place-items: center;
+      inline-size: 2.75rem;
+      block-size: 2.75rem;
+      border: 1px solid var(--borderColour);
+      border-radius: 50%;
+      @include transition(border-color, 0.2s);
+
+      @include hover-focus {
+        border-color: currentColor;
+      }
+    }
+  }
+
+  .copyright {
+    @include body-sm;
+    color: var(--mutedColour);
+  }
+</style>

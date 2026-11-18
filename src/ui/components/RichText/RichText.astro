@@ -1,0 +1,20 @@
+---
+import { StoryblokRichText, type StoryblokAstroRichTextComponentMap } from '@storyblok/astro'
+import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import RichTextLink from './RichTextLink.astro'
+import RichTextParagraph from './RichTextParagraph.astro'
+
+// A Storyblok rich text field with the content styles (mixins/_content-styles.scss).
+type Props = { document: StoryblokRichtext | undefined; class?: string }
+
+const { document, class: className } = Astro.props
+const components: StoryblokAstroRichTextComponentMap = { paragraph: RichTextParagraph, link: RichTextLink }
+---
+
+{
+  document?.content?.length ? (
+    <div class:list={['content', className]}>
+      <StoryblokRichText document={document as never} components={components} />
+    </div>
+  ) : null
+}

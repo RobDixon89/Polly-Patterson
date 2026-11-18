@@ -1,0 +1,50 @@
+---
+import { getPayload } from '@storyblok/astro'
+import { StoryblokBlock } from '../cms/storyblok'
+import type { ContentType, GlobalSettings } from '../cms/types/gen/components/storyblok-components'
+import { imageModel } from '../cms/utils/blocks'
+import { GLOBAL_SETTINGS_SLUG, getStory } from '../cms/utils/stories'
+import Layout from '../layouts/Layout.astro'
+import InnerHero from '../ui/components/InnerHero/InnerHero.astro'
+
+// Every page is a story at the same path: `/` is `home`, `/about` is `about`, `/articles` is the `articles/` folder's start
+// page. In the Visual Editor the story comes from the editor (live updates) or as a draft.
+const { t, version, inEditor } = Astro.locals
+const slug = Astro.params.slug ?? 'home'
+
+// One URL per page. The editor opens stories at their full slug, so leave its requests alone.
+if (Astro.params.slug === 'home' && !inEditor) {
+  return Astro.redirect('/', 301)
+}
+
+const payload = await getPayload<object, { name?: string; content: ContentType }>({ locals: Astro.locals })
+const story = payload.story ?? (await getStory(slug, version))
+const content = story?.content as ContentType | undefined
+
+// The global settings story only opens in the editor
+const isSettings = slug === GLOBAL_SETTINGS_SLUG
+const found = content && (!isSettings || inEditor)
+if (!found) {
+  Astro.response.status = 404
+}
+
+const fields = (found ? content : {}) as Partial<Record<'meta_title' | 'title' | 'meta_description' | 'description' | 'robots', string>> &
+  Partial<Record<'og_image' | 'image', Parameters<typeof imageModel>[0]>>
+const title = fields.meta_title || fields.title || story?.name || t('not_found.title')
+---
+
+<Layout
+  title={found ? title : t('not_found.title')}
+  description={fields.meta_description || fields.description}
+  robots={found ? fields.robots || undefined : 'noindex'}
+  image={imageModel(fields.og_image) ?? imageModel(fields.image)}
+  settings={isSettings && found ? (content as GlobalSettings) : undefined}
+>
+  {
+    found ? (
+      <StoryblokBlock block={content} url={Astro.url} />
+    ) : (
+      <InnerHero title={t('not_found.title')} description={t('not_found.text')} theme="dark" />
+    )
+  }
+</Layout>

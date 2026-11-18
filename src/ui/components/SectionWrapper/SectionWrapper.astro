@@ -1,0 +1,280 @@
+---
+import type { HTMLTag } from 'astro/types'
+import { FULL_SCREEN_SOURCES } from '../../devices'
+import { BACKGROUND_TINTS, BACKGROUND_TINT_DEFAULT, type BackgroundTint, type ImageModel, type SectionTheme } from '../../types'
+import Image from '../Image/Image.astro'
+
+// Root of every section: theme, section spacing, the site-width inner and the optional background image in one place.
+//
+// Scroll state it sets on the section:
+// - `--viewProgress`: 0% as its top enters the bottom of the viewport, 100% once its centre reaches the viewport's
+//   centre (or the whole section is in view);
+// - `--backgroundProgress` (sections with a background image): over the section's trip across the screen, 0% until
+//   15%, up to 100% by 33%, 100% to 66%, back to 0% by the end; for animating the background;
+// - `data-animate="true"` once its top is 40% of the way into the viewport.
+//
+// When the user allows motion, background images move into the page's shared `BackgroundLayer` (behind <main>) and
+// fade with their section's `--backgroundProgress`, loading once their section is within a screen of the viewport;
+// otherwise they stay in the section, covering it (lazy loaded by the browser). Either way a gradient in the theme's
+// background colour (`backgroundTint`) sits over the image and under the content, so the text stays readable.
+type Props = {
+  as?: HTMLTag
+  id?: string
+  theme?: SectionTheme
+  /** `container`: content at site width (default); `full-width`: the slot spans the viewport */
+  layout?: 'container' | 'full-width'
+  /** Fills the section behind its content, cropped per device to a full screen's shape (ui/devices.ts) */
+  backgroundImage?: ImageModel
+  /** How strongly the background image is tinted with the theme's background colour (default medium) */
+  backgroundTint?: BackgroundTint
+  /** Load the background image straight away (the first section on the page) */
+  eager?: boolean
+  class?: string
+  [attr: string]: unknown
+}
+
+const {
+  as: Tag = 'section',
+  id,
+  theme = 'light',
+  layout = 'container',
+  backgroundImage,
+  backgroundTint = BACKGROUND_TINT_DEFAULT,
+  eager = false,
+  class: className,
+  ...attrs
+} = Astro.props
+
+// Also a data attribute, which the script reads (and, in the Visual Editor, updates from the edited story)
+const tint = BACKGROUND_TINTS[backgroundTint] ?? BACKGROUND_TINTS[BACKGROUND_TINT_DEFAULT]
+---
+
+<Tag
+  id={id}
+  data-section-theme={theme}
+  data-background={backgroundImage ? '' : undefined}
+  data-background-tint={backgroundImage ? tint : undefined}
+  style={backgroundImage ? `--backgroundTint: ${tint}%` : undefined}
+  class:list={['section', className]}
+  {...attrs}
+>
+  {
+    backgroundImage && (
+      <Image image={backgroundImage} sources={FULL_SCREEN_SOURCES} loading={eager ? 'eager' : 'lazy'} class="section-background" />
+    )
+  }
+  {layout === 'full-width' ? <slot /> : <div class="site-wide inner"><slot /></div>}
+</Tag>
+
+<script>
+  import { inView, scroll } from 'motion'
+import { BACKGROUND_TINT_DEFAULT, BACKGROUND_TINTS, SECTION_THEMES, type BackgroundTint, type SectionTheme } from '../../types'
+
+  const tracked = new WeakSet<Element>()
+  const percent = (value: number) => `${(value * 100).toFixed(2)}%`
+  const layer = document.querySelector<HTMLElement>('[data-background-layer]')
+  const motion = matchMedia('(prefers-reduced-motion: no-preference)').matches
+  // Each section's wrapper in the shared layer
+  const layered = new Map<HTMLElement, HTMLElement>()
+
+  // The wrapper takes the section's colour and tint, so the gradient covers (and fades with) the image
+  const syncColours = (section: HTMLElement, item: HTMLElement) => {
+    item.style.setProperty('--bgColour', getComputedStyle(section).getPropertyValue('--bgColour'))
+    item.style.setProperty('--backgroundTint', `${section.dataset.backgroundTint ?? 60}%`)
+  }
+
+  // An image in the fixed layer is always "in view", so the browser's lazy loading would fetch it straight away: hold
+  // its sources back until its section is near
+  const sourced = (element: HTMLElement) => [element, ...element.querySelectorAll<HTMLElement>('img, source')].filter((node) => node.matches('img, source'))
+  const holdBack = (element: HTMLElement) => {
+    for (const node of sourced(element)) {
+      for (const name of ['srcset', 'src']) {
+        const value = node.getAttribute(name)
+        if (value) (node.setAttribute(`data-${name}`, value), node.removeAttribute(name))
+      }
+    }
+  }
+  const load = (element: HTMLElement) => {
+    for (const node of sourced(element)) {
+      for (const name of ['srcset', 'src']) {
+        const value = node.getAttribute(`data-${name}`)
+        if (value) (node.setAttribute(name, value), node.removeAttribute(`data-${name}`))
+      }
+    }
+  }
+
+  const track = () => {
+    for (const section of document.querySelectorAll<HTMLElement>('[data-section-theme].section')) {
+      if (tracked.has(section)) continue
+      tracked.add(section)
+
+      // 100% once the centre reaches the screen's centre or the whole section is on screen, whichever comes first, so
+      // a section that fits on screen (like a banner under the sticky header) reaches 100% without more scrolling
+      const view = { centre: 0, whole: 0 }
+      const updateView = () => section.style.setProperty('--viewProgress', percent(Math.max(view.centre, view.whole)))
+      scroll((value: number) => ((view.centre = value), updateView()), { target: section, offset: ['start end', 'center center'] })
+      scroll((value: number) => ((view.whole = value), updateView()), { target: section, offset: ['start end', 'end end'] })
+
+      // Over the section's whole trip across the screen (top enters at the bottom → bottom leaves at the top): 0% until
+      // 15%, up to 100% by 33%, 100% to 66%, back to 0% at the end
+      if (section.hasAttribute('data-background')) {
+        // The image (or the <picture> around it) moves to the shared layer and takes the progress with it
+        const image = section.querySelector('.section-background')
+        const shared = layer && motion && image ? (image.closest('picture') ?? image) : null
+        let item: HTMLElement | null = null
+        if (shared instanceof HTMLElement) {
+          if (image?.getAttribute('loading') !== 'eager') {
+            holdBack(shared)
+            // A screen ahead of (or behind) the viewport
+            inView(section, () => void load(shared), { margin: '100% 0px 100% 0px' })
+          }
+          item = document.createElement('div')
+          syncColours(section, item)
+          item.append(shared)
+          layer!.append(item)
+          layered.set(section, item)
+          section.dataset.background = 'shared'
+        }
+        scroll(
+          (trip: number) => {
+            const value = percent(Math.max(0, Math.min(1, (trip - 0.15) / 0.18, (1 - trip) / 0.34)))
+            section.style.setProperty('--backgroundProgress', value)
+            item?.style.setProperty('--backgroundProgress', value)
+          },
+          { target: section, offset: ['start end', 'end start'] },
+        )
+      }
+
+      // `data-animate="true"` once the section's top is 40% of the way into the viewport, for one-off entrance
+      // animations (the `animate()` and `fade-in-*` mixins in functions/_animate.scss)
+      section.dataset.animate = 'false'
+      inView(section, () => void (section.dataset.animate = 'true'), { margin: '0px 0px -40% 0px' })
+    }
+  }
+
+  // A block in the edited story, by its `_uid`
+  type Block = Record<string, unknown>
+  const findBlock = (node: unknown, uid: string): Block | undefined => {
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const found = findBlock(child, uid)
+        if (found) return found
+      }
+    } else if (node && typeof node === 'object') {
+      if ((node as Block)._uid === uid) return node as Block
+      return findBlock(Object.values(node), uid)
+    }
+    return undefined
+  }
+
+  // A live update morphs the new HTML into the page but copies every attribute of a matched element (by
+  // `data-blok-uid`) from the old one, so a section's theme and tint attributes stay stale until a reload. Set them
+  // from the edited story the update carries instead.
+  const applyEdits = (story: { content?: unknown } | undefined) => {
+    for (const section of document.querySelectorAll<HTMLElement>('.section[data-blok-c]')) {
+      let uid: string | undefined
+      try {
+        uid = JSON.parse(section.dataset.blokC ?? '{}').uid
+      } catch {
+        continue
+      }
+      const block = uid ? findBlock(story?.content, uid) : undefined
+      if (!block) continue
+      const theme = SECTION_THEMES.includes(block.theme as SectionTheme) ? (block.theme as SectionTheme) : SECTION_THEMES[0]
+      section.dataset.sectionTheme = theme
+      const hasImage = !!(block.background_image as { filename?: string } | undefined)?.filename
+      if (hasImage) {
+        const value = block.background_tint as BackgroundTint
+        const tint = BACKGROUND_TINTS[value] ?? BACKGROUND_TINTS[BACKGROUND_TINT_DEFAULT]
+        section.dataset.backgroundTint = String(tint)
+        section.style.setProperty('--backgroundTint', `${tint}%`)
+      } else {
+        section.removeAttribute('data-background-tint')
+      }
+    }
+  }
+
+  // After a Visual Editor live update: apply the edited theme and tint, move each section's re-rendered image into the
+  // layer, refresh its colour and tint, and drop layer items whose section or image has gone. Then pick up new sections.
+  const resync = (event: Event) => {
+    applyEdits((event as CustomEvent<{ story?: { content?: unknown } }>).detail?.story)
+    for (const [section, item] of layered) {
+      if (!section.isConnected || !section.hasAttribute('data-background-tint')) {
+        item.remove()
+        layered.delete(section)
+        if (section.isConnected) section.removeAttribute('data-background')
+        continue
+      }
+      const fresh = section.querySelector<HTMLElement>('.section-background')
+      if (fresh) item.replaceChildren(fresh.closest('picture') ?? fresh)
+      syncColours(section, item)
+    }
+    track()
+  }
+
+  track()
+  document.addEventListener('storyblok-live-preview-updated', resync)
+</script>
+
+<style lang="scss">  
+  @use '@styles/functions/animate' as *;
+
+  .section {
+    --viewProgress: 0%;
+    --backgroundProgress: 0%;
+
+    position: relative;
+    isolation: isolate;
+    background-color: var(--bgColour);
+    color: var(--fgColour);
+    scroll-margin-block-start: var(--headerHeight, 0);
+  }
+
+  // Clipped so the image stays in the section's box while it's there (no shared layer)
+  .section[data-background] {
+    overflow: clip;
+
+    @include shouldAnimate() {
+      min-height: 100dvh;
+      display: flex;
+
+      .inner {
+        margin-block: auto;
+        z-index: 1;
+      }
+    }
+  }
+
+  // The image moved to the shared layer: the section lets the layer show through
+  .section[data-background='shared'] {
+    background-color: transparent;
+  }
+
+  // Over the image while it's in the section (in the shared layer, BackgroundLayer draws it on the image) and under the
+  // content: the theme's background colour at
+  // `--backgroundTint` at the bottom, fading to half that at the top
+  .section[data-background]:not([data-background='shared'])::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--bgColour) var(--backgroundTint, 60%), transparent),
+      color-mix(in srgb, var(--bgColour) calc(var(--backgroundTint, 60%) / 2), transparent)
+    );
+  }
+
+  .section :global(.section-background) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .inner {
+    padding-block: var(--sectionSpacing);
+  }
+</style>

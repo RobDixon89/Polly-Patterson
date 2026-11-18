@@ -1,0 +1,47 @@
+---
+// One fixed, full-screen layer behind <main> that holds every section's background image. SectionWrapper moves each
+// image here on load (only when the user allows motion) and sets its `--backgroundProgress`, so the images cross-fade
+// as their sections scroll past. Background sections are transparent then, so the layer shows through them and nowhere
+// else; their content stays above it.
+---
+
+<div class="background-layer" data-background-layer aria-hidden="true"></div>
+
+<style>
+  .background-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* A section's image, in a wrapper that carries the section's --bgColour, --backgroundTint and --backgroundProgress */
+  .background-layer > :global(*) {
+    position: absolute;
+    inset: 0;
+    opacity: var(--backgroundProgress, 0);
+  }
+
+  /* The tint over the image: the section's background colour at --backgroundTint at the bottom, half that at the top */
+  .background-layer > :global(*)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--bgColour) var(--backgroundTint, 60%), transparent),
+      color-mix(in srgb, var(--bgColour) calc(var(--backgroundTint, 60%) / 2), transparent)
+    );
+  }
+
+  .background-layer :global(picture) {
+    display: block;
+    block-size: 100%;
+  }
+
+  .background-layer :global(img) {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+</style>

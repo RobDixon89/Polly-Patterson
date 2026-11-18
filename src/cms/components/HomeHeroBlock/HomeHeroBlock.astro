@@ -1,0 +1,59 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import Image from '../../../ui/components/Image/Image.astro'
+import RichText from '../../../ui/components/RichText/RichText.astro'
+import SectionWrapper from '../../../ui/components/SectionWrapper/SectionWrapper.astro'
+import type { BlockExtraProps } from '../../storyblok'
+import type { HomeHero } from '../../types/gen/components/storyblok-components'
+import { backgroundTint, imageModel, sectionId, sectionTheme } from '../../utils/blocks'
+
+type Props = StoryblokBlockComponentProps<HomeHero, BlockExtraProps>
+
+const { block, editable } = Astro.props
+const image = imageModel(block.image)
+---
+
+<SectionWrapper
+  as="header"
+  id={sectionId(block.anchor_id)}
+  theme={sectionTheme(block.theme)}
+  backgroundImage={imageModel(block.background_image)}
+  backgroundTint={backgroundTint(block.background_tint)}
+  eager
+  {...editable}
+>
+  <div class="grid">
+    <div>
+      <h1>{block.title}</h1>
+      <RichText document={block.introduction} class="introduction" />
+    </div>
+    {image && <Image image={image} ratio={[1, 1]} sizes="(min-width: 768px) 50vw, 100vw" loading="eager" class="image" />}
+  </div>
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .grid {
+    display: grid;
+    gap: #{fluid(32, 64)};
+    align-items: center;
+
+    @include from($bp-tablet) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .grid :global(.introduction) {
+    @include body-lg;
+    margin-block-start: #{fluid(16, 32)};
+  }
+
+  .grid :global(.image) {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+  }
+</style>

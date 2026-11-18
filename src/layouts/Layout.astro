@@ -1,0 +1,93 @@
+---
+import { StoryblokPreview, storyblokEditable } from '@storyblok/astro'
+import { Font } from 'astro:assets'
+import type { GlobalSettings } from '../cms/types/gen/components/storyblok-components'
+import { linkHref, linkModel } from '../cms/utils/blocks'
+import { getGlobalSettings } from '../cms/utils/stories'
+import { format } from '../cms/utils/strings'
+import BackgroundLayer from '../ui/components/BackgroundLayer/BackgroundLayer.astro'
+import SiteFooter, { type SocialNetwork } from '../ui/components/SiteFooter/SiteFooter.astro'
+import SiteHeader from '../ui/components/SiteHeader/SiteHeader.astro'
+import SkipLink from '../ui/components/SkipLink/SkipLink.astro'
+import type { ImageModel, LinkModel } from '../ui/types'
+import '../styles/index.scss'
+
+type Props = {
+  title: string
+  description?: string
+  robots?: string
+  /** The share image */
+  image?: ImageModel
+  /**
+   * The global settings, when the page is the global settings story itself (its draft, with live updates); otherwise
+   * the layout loads them
+   */
+  settings?: GlobalSettings
+}
+
+const { title, description, robots, image, settings: ownSettings } = Astro.props
+const { t, version, inEditor } = Astro.locals
+
+const settings = ownSettings ?? (await getGlobalSettings(version))
+// Editor markers only on the global settings story, where clicking the header or footer should open it
+const editable = ownSettings ? storyblokEditable(ownSettings as { _editable?: string }) : {}
+
+const links = (items: GlobalSettings['footer_links']): LinkModel[] =>
+  (items ?? []).map(linkModel).filter((link): link is LinkModel => !!link)
+
+const NETWORKS: SocialNetwork[] = ['twitter', 'instagram', 'youtube']
+const social = NETWORKS.flatMap((network) => {
+  const href = linkHref(settings?.[`${network}_url`])
+  return href ? [{ network, href, label: t(`social.${network}`) }] : []
+})
+
+const siteName = t('site.name')
+const pageTitle = title === siteName ? title : t('meta.title', { title, site: siteName })
+const shareImage = image && `${image.src}/m/1200x630`
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>{pageTitle}</title>
+    {description && <meta name="description" content={description} />}
+    {robots && <meta name="robots" content={robots} />}
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.url)} />
+    <meta property="og:title" content={title} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:type" content="website" />
+    {description && <meta property="og:description" content={description} />}
+    {shareImage && <meta property="og:image" content={shareImage} />}
+    <Font cssVariable="--font-heading" preload />
+    <Font cssVariable="--font-body" preload />
+  </head>
+  <body>
+    <SkipLink label={t('header.skip_link')} />
+    <SiteHeader
+      siteName={siteName}
+      leftLinks={links(settings?.header_left_links)}
+      rightLinks={links(settings?.header_right_links)}
+      currentPath={Astro.url.pathname.replace(/(.)\/$/, '$1')}
+      navLabel={t('header.nav_label')}
+      menuLabel={t('header.menu_label')}
+      {...editable}
+    />
+    <BackgroundLayer />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter
+      links={links(settings?.footer_links)}
+      social={social}
+      copyright={settings?.copyright && format(settings.copyright, { year: new Date().getFullYear() })}
+      navLabel={t('footer.nav_label')}
+      socialLabel={t('footer.social_label')}
+      {...editable}
+    />
+    {inEditor && <StoryblokPreview liveUpdate />}
+  </body>
+</html>

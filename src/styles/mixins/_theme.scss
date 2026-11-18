@@ -1,0 +1,33 @@
+@use '../variables/colours' as *;
+
+// Section themes, applied by `SectionWrapper` through `data-section-theme`. Keep in sync with `SECTION_THEMES` in
+// src/ui/types.ts (same names, same order; the first is the default).
+$section-themes: ('light', 'dark');
+
+@mixin section-theme($theme, $includeProperties: true) {
+  @if $theme == 'light' {
+    --bgColour: #{light(500)};
+    --fgColour: #{dark(500)};
+    --mutedColour: #{dark(300)};
+    --borderColour: #{light(700)};
+  } @else if $theme == 'dark' {
+    --bgColour: #{dark(500)};
+    --fgColour: #{light(500)};
+    --mutedColour: #{light(700)};
+    --borderColour: #{dark(300)};
+  }
+
+  @if $includeProperties {
+    background-color: var(--bgColour);
+    color: var(--fgColour);
+  }
+}
+
+/// Every theme as a `[data-section-theme]` rule
+@mixin section-themes {
+  @each $theme in $section-themes {
+    [data-section-theme='#{$theme}'] {
+      @include section-theme($theme);
+    }
+  }
+}

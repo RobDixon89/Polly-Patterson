@@ -1,0 +1,20 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import RichTextSection from '../../../ui/components/RichTextSection/RichTextSection.astro'
+import type { BlockExtraProps } from '../../storyblok'
+import type { RichText as RichTextModel } from '../../types/gen/components/storyblok-components'
+import { backgroundTint, imageModel, sectionId, sectionTheme } from '../../utils/blocks'
+
+type Props = StoryblokBlockComponentProps<RichTextModel, BlockExtraProps>
+
+const { block, editable } = Astro.props
+---
+
+<RichTextSection
+  document={block.content}
+  theme={sectionTheme(block.theme)}
+  backgroundImage={imageModel(block.background_image)}
+  backgroundTint={backgroundTint(block.background_tint)}
+  id={sectionId(block.anchor_id)}
+  {...editable}
+/>

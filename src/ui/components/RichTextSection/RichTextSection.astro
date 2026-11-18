@@ -1,0 +1,27 @@
+---
+import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import type { ImageModel, SectionTheme } from '../../types'
+import RichText from '../RichText/RichText.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// The Rich Text section: rich text at a readable width in a themed section, with an optional background image.
+type Props = {
+  document: StoryblokRichtext | undefined
+  theme?: SectionTheme
+  backgroundImage?: ImageModel
+  id?: string
+  [attr: string]: unknown
+}
+
+const { document, theme, backgroundImage, id, ...attrs } = Astro.props
+---
+
+<SectionWrapper id={id} theme={theme} backgroundImage={backgroundImage} {...attrs}>
+  <RichText document={document} class="rich-text" />
+</SectionWrapper>
+
+<style>
+  :global(.rich-text) {
+    max-inline-size: 800px;
+  }
+</style>

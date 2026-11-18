@@ -1,0 +1,79 @@
+---
+// Previous / next links and the page numbers. Renders nothing for a single page.
+type Props = {
+  /** The current page, from 1 */
+  page: number
+  /** Each page's address, in order */
+  hrefs: string[]
+  /** Each page's screen reader name, in order, e.g. "Page 2 of 3" */
+  pageLabels: string[]
+  label: string
+  previousLabel: string
+  nextLabel: string
+}
+
+const { page, hrefs, pageLabels, label, previousLabel, nextLabel } = Astro.props
+---
+
+{
+  hrefs.length > 1 && (
+    <nav aria-label={label} class="pagination">
+      {page > 1 && <a href={hrefs[page - 2]} rel="prev">{previousLabel}</a>}
+      <ol>
+        {hrefs.map((href, index) => (
+          <li>
+            <a href={href} aria-current={index + 1 === page ? 'page' : undefined} aria-label={pageLabels[index]}>
+              {index + 1}
+            </a>
+          </li>
+        ))}
+      </ol>
+      {page < hrefs.length && <a href={hrefs[page]} rel="next">{nextLabel}</a>}
+    </nav>
+  )
+}
+
+<style lang="scss">
+  @use '@styles/functions/animate' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/content-styles' as *;
+
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    // Previous and next
+    > a {
+      @include link-styles;
+    }
+  }
+
+  ol {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ol a {
+    display: grid;
+    place-items: center;
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    @include transition(border-color, 0.2s);
+
+    &[aria-current='page'] {
+      border-color: currentColor;
+    }
+
+    @include hover-focus {
+      border-color: var(--borderColour);
+    }
+  }
+</style>

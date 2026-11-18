@@ -1,0 +1,319 @@
+---
+import type { LinkModel } from '../../types'
+
+// The site header. From the large tablet breakpoint: the left links, the logo, the right links. Below it: the logo and
+// a menu button that opens a tray from the right with every link stacked (left links first) over a blurred overlay.
+type Props = {
+  siteName: string
+  leftLinks: LinkModel[]
+  rightLinks: LinkModel[]
+  /** The current path, to mark the current link */
+  currentPath: string
+  navLabel: string
+  menuLabel: string
+  [attr: string]: unknown
+}
+
+const { siteName, leftLinks, rightLinks, currentPath, navLabel, menuLabel, ...attrs } = Astro.props
+const isCurrent = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`)
+const hasLinks = leftLinks.length + rightLinks.length > 0
+---
+
+<header class="header" data-section-theme="dark" data-site-header {...attrs}>
+  <nav aria-label={navLabel} class="site-wide bar">
+    <ul class="links left">
+      {
+        leftLinks.map((link) => (
+          <li>
+            <a href={link.href} target={link.target} aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.text}</a>
+          </li>
+        ))
+      }
+    </ul>
+    <!-- Placeholder logo: the site name -->
+    <a href="/" class="logo">{siteName}</a>
+    <ul class="links right">
+      {
+        rightLinks.map((link) => (
+          <li>
+            <a href={link.href} target={link.target} aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.text}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    hasLinks && (
+      <>
+        <button type="button" class="toggle" aria-expanded="false" aria-controls="nav-tray" data-menu-toggle>
+          <span class="sr-only">{menuLabel}</span>
+          <span class="wing wing-tl" aria-hidden="true" />
+          <span class="wing wing-tr" aria-hidden="true" />
+          <span class="wing wing-m" aria-hidden="true" />
+          <span class="wing wing-br" aria-hidden="true" />
+          <span class="wing wing-bl" aria-hidden="true" />
+        </button>
+        <div class="overlay" data-menu-overlay />
+        <div id="nav-tray" class="tray" data-section-theme="dark" inert>
+          <nav aria-label={navLabel}>
+            <ul>
+              {[...leftLinks, ...rightLinks].map((link) => (
+                <li>
+                  <a href={link.href} target={link.target} aria-current={isCurrent(link.href) ? 'page' : undefined}>
+                    {link.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </>
+    )
+  }
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-site-header]')
+  const toggle = header?.querySelector<HTMLButtonElement>('[data-menu-toggle]')
+  const tray = header?.querySelector<HTMLElement>('#nav-tray')
+
+  if (header && toggle && tray) {
+    // Everything but the tray and its button, so focus stays in the open menu
+    const outside = () => document.querySelectorAll<HTMLElement>('.skip-link, main, footer, [data-site-header] .bar')
+    const isOpen = () => header.hasAttribute('data-menu-open')
+
+    const setOpen = (open: boolean) => {
+      header.toggleAttribute('data-menu-open', open)
+      toggle.setAttribute('aria-expanded', String(open))
+      tray.inert = !open
+      outside().forEach((element) => (element.inert = open))
+      document.documentElement.style.overflow = open ? 'hidden' : ''
+    }
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()))
+    header.querySelector('[data-menu-overlay]')?.addEventListener('click', () => setOpen(false))
+    tray.addEventListener('click', (event) => {
+      if ((event.target as Element).closest('a')) setOpen(false)
+    })
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen()) {
+        setOpen(false)
+        toggle.focus()
+      }
+    })
+    // The tray is mobile only: close it when the layout switches to the desktop bar
+    matchMedia('(min-width: 1024px)').addEventListener('change', (event) => event.matches && setOpen(false))
+  }
+
+  if (header) {
+    // Hide while scrolling down (once past the header), show again as soon as scrolling turns upwards
+    let lastY = scrollY
+    addEventListener(
+      'scroll',
+      () => {
+        const y = scrollY
+        const down = y > lastY && y > header.offsetHeight
+        if (!header.hasAttribute('data-menu-open') && Math.abs(y - lastY) > 2) {
+          header.toggleAttribute('data-header-hidden', down)
+        }
+        lastY = y
+      },
+      { passive: true },
+    )
+    // Keyboard users tabbing into a hidden header need to see it
+    header.addEventListener('focusin', () => header.removeAttribute('data-header-hidden'))
+  }
+</script>
+
+<style lang="scss">
+  @use 'sass:color';
+  @use '@styles/functions/animate' as *;
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/content-styles' as *;
+  @use '@styles/mixins/typography' as *;
+  @use '@styles/variables/colours' as *;
+
+  $menu-breakpoint: $bp-tablet-large;
+
+  // Sticky; slides up out of view while scrolling down and back while scrolling up (`data-header-hidden`, set below).
+  // Moved with `top`, not a transform: a transform would make the header the containing block for the fixed tray.
+  .header {
+    @include transition(inset-block-start, 0.3s);
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 10;
+    background-color: var(--bgColour);
+    color: var(--fgColour);
+
+    &[data-header-hidden] {
+      inset-block-start: calc(var(--headerHeight) * -1);
+    }
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--headerHeight);
+
+    @include from($menu-breakpoint, false) {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 2rem;
+    }
+  }
+
+  .logo {
+    @include h6;
+    @include underline-on-hover;
+  }
+
+  .links {
+    display: none;
+    gap: #{fluid(16, 32)};
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include from($menu-breakpoint, false) {
+      display: flex;
+    }
+
+    &.right {
+      justify-content: flex-end;
+    }
+  }
+
+  .links a,
+  .tray a {
+    @include underline-on-hover;
+  }
+
+  // Menu button: the burger's top and bottom bars are split in two; opening hides the middle bar and turns the four
+  // halves into an X (after https://codepen.io/bennyschudel/pen/emgeep)
+  .toggle {
+    position: absolute;
+    inset-block-start: calc((var(--headerHeight) - 3.2em) / 2);
+    inset-inline-end: calc(var(--sitePadding) - 0.5em);
+    z-index: 12;
+    inline-size: 3.2em;
+    block-size: 3.2em;
+    padding: 0;
+    font-size: 14px;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    @include from($menu-breakpoint, false) {
+      display: none;
+    }
+  }
+
+  .wing {
+    @include transition(transform, 0.2s);
+    position: absolute;
+    inline-size: 1.1em;
+    block-size: 0.2em;
+    background-color: currentColor;
+  }
+
+  .wing-m {
+    inset-block-start: 50%;
+    inset-inline-start: 0.5em;
+    inline-size: 2.2em;
+    margin-block-start: -0.1em;
+    transform-origin: 1.1em 0.1em;
+  }
+
+  .wing-tl {
+    inset-block-start: 0.8em;
+    inset-inline-start: 0.5em;
+    transform-origin: 0.4em 0.1em;
+  }
+
+  .wing-tr {
+    inset-block-start: 0.8em;
+    inset-inline-end: 0.5em;
+    transform-origin: 0.7em 0.1em;
+  }
+
+  .wing-br {
+    inset-block-end: 0.8em;
+    inset-inline-end: 0.5em;
+    transform-origin: 0.7em 0.1em;
+  }
+
+  .wing-bl {
+    inset-block-end: 0.8em;
+    inset-inline-start: 0.5em;
+    transform-origin: 0.4em 0.1em;
+  }
+
+  [data-menu-open] {
+    .wing-m { transform: scale(0, 1); }
+    .wing-tl { transform: rotate(45deg) translate(0.3em, 0); }
+    .wing-tr { transform: rotate(-45deg) translate(-0.3em, 0); }
+    .wing-br { transform: rotate(45deg) translate(-0.3em, 0); }
+    .wing-bl { transform: rotate(-45deg) translate(0.3em, 0); }
+  }
+
+  .overlay {
+    @include transition((opacity, visibility), 0.3s);
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background-color: color.change(dark(900), $alpha: 0.6);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .tray {
+    @include transition((transform, visibility), 0.4s);
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 11;
+    inline-size: min(100%, 420px);
+    padding: calc(var(--headerHeight) + 1rem) var(--sitePadding) 2rem;
+    overflow-y: auto;
+    background-color: var(--bgColour);
+    color: var(--fgColour);
+    transform: translateX(100%);
+    visibility: hidden;
+
+    ul {
+      display: grid;
+      gap: 1.25rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    a {
+      @include h5;
+    }
+  }
+
+  [data-menu-open] {
+    .overlay {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tray {
+      transform: none;
+      visibility: visible;
+    }
+  }
+
+  @include from($menu-breakpoint, false) {
+    .overlay,
+    .tray {
+      display: none;
+    }
+  }
+</style>

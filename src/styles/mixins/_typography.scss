@@ -1,0 +1,30 @@
+@use '../fonts/font-variables' as *;
+
+// Type scale mixins. Body text inherits its family from `body`; headings set theirs.
+
+@mixin -heading($size) {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-regular;
+  font-size: $size;
+  line-height: $line-height-heading;
+  letter-spacing: normal;
+}
+
+@mixin h1 { @include -heading($font-size-h1); }
+@mixin h2 { @include -heading($font-size-h2); }
+@mixin h3 { @include -heading($font-size-h3); }
+@mixin h4 { @include -heading($font-size-h4); }
+@mixin h5 { @include -heading($font-size-h5); }
+@mixin h6 { @include -heading($font-size-h6); }
+
+@mixin -copy($size) {
+  font-family: $font-family-body;
+  font-size: $size;
+  line-height: $line-height-body;
+  letter-spacing: $letter-spacing-body;
+}
+
+@mixin body-lg { @include -copy($font-size-body-lg); }
+@mixin body { @include -copy($font-size-body); }
+@mixin body-sm { @include -copy($font-size-body-sm); }
+@mixin body-xs { @include -copy($font-size-body-xs); }

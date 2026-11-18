@@ -1,0 +1,88 @@
+@use 'sass:math';
+
+// Base pixel value for the "rem" unit
+$pixels-per-rem: 16 !default;
+
+// Default widths
+$default-min-width: 375px;
+$default-max-width: 1920px;
+
+/// Round to nearest hundredth
+@function round-number($number) {
+  @return math.div(math.round($number * 100), 100);
+}
+
+/// Convert px to rem
+@function px-to-rem($px) {
+  @return round-number(math.div($px, $pixels-per-rem)) * 1rem;
+}
+
+/// Generate a fluid value in rem
+/// @param $min - minimum value in px
+/// @param $max - maximum value in px
+/// @param $min-width - minimum viewport width in px
+/// @param $max-width - maximum viewport width in px
+@function fluid(
+  $min,
+  $max,
+  $min-width: $default-min-width,
+  $max-width: $default-max-width
+) {
+  $min-rem: math.div($min, $pixels-per-rem);
+  $max-rem: math.div($max, $pixels-per-rem);
+  $min-width-rem: strip-unit(math.div($min-width, $pixels-per-rem));
+  $max-width-rem: strip-unit(math.div($max-width, $pixels-per-rem));
+
+  $slope: math.div(($max-rem - $min-rem), ($max-width-rem - $min-width-rem));
+  $y-intercept: -$min-width-rem * $slope + $min-rem;
+
+  // `$min` / `$max` are the values at the smallest / largest viewport, so `$min` can be the larger one (e.g. a
+  // line height that tightens on desktop). clamp() needs its lower bound first, so order the bounds by value.
+  $clamp-min: round-number(math.min($min-rem, $max-rem)) + rem;
+  $clamp-val: round-number($y-intercept) + rem + ' + ' +
+    round-number($slope * 100) + 'vw';
+  $clamp-max: round-number(math.max($min-rem, $max-rem)) + rem;
+
+  @return clamp(#{$clamp-min}, #{$clamp-val}, #{$clamp-max});
+}
+
+/// Strip unit from a number
+@function strip-unit($number) {
+  @if math.is-unitless($number) {
+    @return $number;
+  }
+  @return math.div($number, ($number * 0 + 1));
+}
+
+/// Get unit from a number
+@function get-unit($number) {
+  @return math.unit($number);
+}
+
+/// Generate a fluid value with any unit (auto-detects unit from $min)
+@function fluid-unit(
+  $min,
+  $max,
+  $min-width: $default-min-width,
+  $max-width: $default-max-width
+) {
+  $unit: get-unit($min);
+
+  $min-unitless: strip-unit($min);
+  $max-unitless: strip-unit($max);
+  $min-width-unitless: strip-unit($min-width);
+  $max-width-unitless: strip-unit($max-width);
+
+  $slope: math.div(
+    ($max-unitless - $min-unitless),
+    ($max-width-unitless - $min-width-unitless)
+  );
+  $y-intercept: -$min-width-unitless * $slope + $min-unitless;
+
+  $clamp-min: round-number($min-unitless) + $unit;
+  $clamp-val: round-number($y-intercept) + $unit + ' + ' +
+    round-number($slope * 100) + 'vw';
+  $clamp-max: round-number($max-unitless) + $unit;
+
+  @return clamp(#{$clamp-min}, #{$clamp-val}, #{$clamp-max});
+}

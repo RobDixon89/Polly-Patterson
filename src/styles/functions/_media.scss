@@ -1,0 +1,80 @@
+@use 'sass:math';
+
+$bp-mobile-small: 320;
+$bp-mobile: 375;
+$bp-mobile-large: 480;
+$bp-tablet-small: 568;
+$bp-tablet: 768;
+$bp-tablet-large: 1024;
+$bp-desktop-small: 1280;
+$bp-desktop: 1366;
+$bp-desktop-large: 1600;
+$bp-desktop-actual: 1920;
+$bp-desktop-extra-large: 2560;
+
+// Breakpoint mixins. Container queries by default: they resolve against the nearest `container-type` ancestor, which
+// is the layout's root (`default.vue`, `simple.vue`; the Storybook preview wraps stories the same way) unless a
+// component sets its own. Pass `$container: false` for a media query, for content rendered outside the layout
+// (teleported to `#teleports` or <body>) or when the viewport itself matters.
+@mixin from($bp, $container: true) {
+  @if math.is-unitless($bp) {
+    $bp: $bp * 1px;
+  }
+  @if $container {
+    @container (min-width: #{$bp}) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $bp) {
+      @content;
+    }
+  }
+}
+
+@mixin until($bp, $container: true) {
+  @if math.is-unitless($bp) {
+    $bp: $bp * 1px;
+  }
+  @if $container {
+    @container (max-width: #{($bp - 1px)}) {
+      @content;
+    }
+  } @else {
+    @media (max-width: ($bp - 1px)) {
+      @content;
+    }
+  }
+}
+
+@mixin between($bp-start, $bp-end, $container: true) {
+  @if math.is-unitless($bp-start) {
+    $bp-start: $bp-start * 1px;
+  }
+  @if math.is-unitless($bp-end) {
+    $bp-end: $bp-end * 1px;
+  }
+  @if $container {
+    @container (min-width: #{$bp-start}) and (max-width: #{($bp-end - 1px)}) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $bp-start) and (max-width: ($bp-end - 1px)) {
+      @content;
+    }
+  }
+}
+
+// Interaction styles for `:focus-visible` on all devices and `:hover` only on devices with a real
+// hover-capable pointer, so touch taps don't leave elements stuck in their hover state.
+// Use inside a focusable element's rule; the `&:focus-visible` / `&:hover` selectors are added for you.
+@mixin hover-focus {
+  &:focus-visible {
+    @content;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @content;
+    }
+  }
+}

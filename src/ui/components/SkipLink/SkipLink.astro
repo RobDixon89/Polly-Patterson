@@ -1,0 +1,35 @@
+---
+// The first thing on every page: hidden until keyboard focus reaches it, then a button that jumps past the header to
+// the content (`<main id="main" tabindex="-1">`, so focus moves there too).
+type Props = { label: string; target?: string }
+
+const { label, target = 'main' } = Astro.props
+---
+
+<a href={`#${target}`} class="skip-link" data-section-theme="light">{label}</a>
+
+<style lang="scss">
+  @use '@styles/functions/animate' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .skip-link {
+    @include body-sm;
+    @include transition(transform, 0.2s);
+    position: fixed;
+    inset-block-start: 0.75rem;
+    inset-inline-start: 0.75rem;
+    z-index: 100;
+    padding: 0.75rem 1.25rem 0.5em;
+    font-weight: 700;
+    color: var(--bgColour);
+    text-decoration: none;
+    background-color: var(--fgColour);
+    border: 2px solid currentColor;
+    transform: translateY(calc(-100% - 1.5rem));
+    outline-color: var(--fgColour);
+
+    &:focus-visible {
+      transform: none;
+    }
+  }
+</style>

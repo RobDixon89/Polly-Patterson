@@ -1,0 +1,14 @@
+---
+import type { StoryblokAstroRichTextProps } from '@storyblok/astro'
+import { isExternal, richTextHref } from '../../../cms/utils/blocks'
+
+// Links resolved like multilink fields: story links become site paths, bare domains get https://.
+type Props = StoryblokAstroRichTextProps<'link'>
+
+const attrs = (Astro.props.attrs ?? {}) as Parameters<typeof richTextHref>[0] & { target?: string | null }
+const href = richTextHref(attrs)
+const target = attrs.target === '_blank' ? '_blank' : undefined
+const rel = target || (href && isExternal(href)) ? 'noopener' : undefined
+---
+
+{href ? <a href={href} target={target} rel={rel}><slot /></a> : <slot />}

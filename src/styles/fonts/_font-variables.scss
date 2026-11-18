@@ -1,0 +1,27 @@
+@use '../functions/fluid' as *;
+
+// Families come from Astro's Fonts API (astro.config.mjs), which sets these custom properties
+$font-family-heading: var(--font-heading), Georgia, serif;
+$font-family-body: var(--font-body), system-ui, sans-serif;
+
+$font-weight-regular: 400;
+$font-weight-bold: 700;
+
+// Headings: Crete Round, mobile (375px) → desktop (1920px), rounded
+$font-size-h1: fluid(62, 110);
+$font-size-h2: fluid(48, 84);
+$font-size-h3: fluid(40, 63);
+$font-size-h4: fluid(32, 47);
+$font-size-h5: fluid(26, 36);
+$font-size-h6: fluid(21, 27);
+
+$line-height-heading: 1;
+
+// Body: Varta
+$font-size-body-lg: fluid(20, 24);
+$font-size-body: fluid(18, 20);
+$font-size-body-sm: fluid(14, 16);
+$font-size-body-xs: fluid(11, 13);
+
+$line-height-body: 1.5;
+$letter-spacing-body: 0.32px;

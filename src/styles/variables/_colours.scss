@@ -1,0 +1,32 @@
+@use 'sass:color';
+@use 'sass:map';
+
+// Temporary palette: tints (100–400) and shades (600–900) of the two brand colours, with the brand colour at 500.
+$brand-dark: rgb(48 57 67);
+$brand-light: rgb(239 224 190);
+
+@function -scale($base) {
+  @return (
+    100: color.mix(white, $base, 80%),
+    200: color.mix(white, $base, 60%),
+    300: color.mix(white, $base, 40%),
+    400: color.mix(white, $base, 20%),
+    500: $base,
+    600: color.mix(black, $base, 15%),
+    700: color.mix(black, $base, 30%),
+    800: color.mix(black, $base, 45%),
+    900: color.mix(black, $base, 60%)
+  );
+}
+
+$dark: -scale($brand-dark);
+$light: -scale($brand-light);
+
+/// A palette colour: `dark(500)`, `light(200)`
+@function dark($step) {
+  @return map.get($dark, $step);
+}
+
+@function light($step) {
+  @return map.get($light, $step);
+}

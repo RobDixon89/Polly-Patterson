@@ -1,0 +1,104 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import ArticleCard from '../../../ui/components/ArticleCard/ArticleCard.astro'
+import InnerHero from '../../../ui/components/InnerHero/InnerHero.astro'
+import Pagination from '../../../ui/components/Pagination/Pagination.astro'
+import SectionWrapper from '../../../ui/components/SectionWrapper/SectionWrapper.astro'
+import type { BlockExtraProps } from '../../storyblok'
+import type { ArticleListing } from '../../types/gen/components/storyblok-components'
+import { imageModel, isExternal, linkHref, storyblokDateTime } from '../../utils/blocks'
+import { formatDate } from '../../utils/dates'
+import { articleContent, listArticles } from '../../utils/stories'
+
+// The article listing: an inner hero from its own fields, then the articles in its folder, newest first, a page at
+// a time (`?page=2`).
+type Props = StoryblokBlockComponentProps<ArticleListing, BlockExtraProps>
+
+const { block, editable, url } = Astro.props
+const { t, version } = Astro.locals
+
+// The listing is its folder's start page, so its path is the folder
+const folder = url.pathname.replace(/^\/|\/$/g, '')
+const page = Math.max(1, Number.parseInt(url.searchParams.get('page') ?? '1', 10) || 1)
+const { articles, pages } = await listArticles(folder, page, version)
+const numbers = Array.from({ length: pages }, (_, index) => index + 1)
+
+// Keeps the other query parameters, so paging works in the Visual Editor too
+const pageHref = (number: number) => {
+  const target = new URL(url)
+  if (number > 1) target.searchParams.set('page', String(number))
+  else target.searchParams.delete('page')
+  return `${target.pathname}${target.search}`
+}
+
+const cards = articles.map((story) => {
+  const article = articleContent(story)
+  const href = linkHref(article.external_url) ?? `/${story.full_slug}`
+  return {
+    key: story.uuid,
+    title: article.title || story.name,
+    description: article.description,
+    href,
+    external: isExternal(href),
+    date: formatDate(article.published_date),
+    dateTime: storyblokDateTime(article.published_date),
+    image: imageModel(article.image),
+  }
+})
+---
+
+<div {...editable}>
+  <InnerHero title={block.title} description={block.description} backgroundImage={imageModel(block.image)} theme="dark" />
+  <SectionWrapper>
+    {
+      cards.length ? (
+        <ul class="grid">
+          {cards.map(({ key, ...card }) => (
+            <li>
+              <ArticleCard {...card} externalLabel={t('article.external_label')} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>{t('article.empty')}</p>
+      )
+    }
+    <Pagination
+      page={page}
+      hrefs={numbers.map(pageHref)}
+      pageLabels={numbers.map((number) => t('pagination.page', { page: number, pages }))}
+      label={t('pagination.label')}
+      previousLabel={t('pagination.previous')}
+      nextLabel={t('pagination.next')}
+    />
+  </SectionWrapper>
+</div>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+
+  .grid {
+    display: grid;
+    gap: #{fluid(24, 32)};
+    margin: 0 0 #{fluid(32, 48)};
+    padding: 0;
+    list-style: none;
+
+    @include from($bp-tablet) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include from($bp-tablet-large) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  li {
+    display: flex;
+
+    > :global(*) {
+      flex: 1;
+    }
+  }
+</style>

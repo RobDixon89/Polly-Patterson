@@ -1,0 +1,131 @@
+@use '../functions/fluid' as *;
+@use 'typography' as *;
+@use '@styles/functions/animate' as *;
+@use '../functions/media' as *;
+
+// Styles for rich text (`RichText`): the elements the toolbar makes, and the style options editors pick
+// (`CONTENT_STYLE_OPTIONS` in src/cms/schema/fields.ts: `h1-style` … `h6-style`, `body-lg`, `body`, `body-sm`, `body-xs`).
+//
+// Hover styles go through `hover-focus` (functions/_media.scss), so keyboard focus (`:focus-visible`) gets them too.
+
+// Links in text: underlined, the underline fading on hover and focus
+@mixin link-styles {
+  @include transition(text-decoration-color, 0.2s);
+
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: currentColor;
+
+  @include hover-focus {
+    text-decoration-color: transparent;
+  }
+}
+
+// Navigation links: no underline until hover or focus, when it fades in; the current page keeps it
+@mixin underline-on-hover($offset: 6px) {
+  @include transition(text-decoration-color, 0.2s);
+
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: $offset;
+  text-decoration-color: transparent;
+
+  &[aria-current='page'] {
+    text-decoration-color: currentColor;
+  }
+
+  @include hover-focus {
+    text-decoration-color: currentColor;
+  }
+}
+
+@mixin content-styles {
+  > :first-child {
+    margin-block-start: 0;
+  }
+
+  > :last-child {
+    margin-block-end: 0;
+  }
+
+  p,
+  ul,
+  ol {
+    margin: 0 0 1rem;
+  }
+
+  @each $level in (1, 2, 3, 4, 5, 6) {
+    h#{$level},
+    .h#{$level}-style {
+      margin: 1em 0 0.4em;
+
+      @if $level == 1 {
+        @include h1;
+      }
+      @if $level == 2 {
+        @include h2;
+      }
+      @if $level == 3 {
+        @include h3;
+      }
+      @if $level == 4 {
+        @include h4;
+      }
+      @if $level == 5 {
+        @include h5;
+      }
+      @if $level == 6 {
+        @include h6;
+      }
+    }
+  }
+
+  .body-lg {
+    @include body-lg;
+  }
+  .body {
+    @include body;
+  }
+  .body-sm {
+    @include body-sm;
+  }
+  .body-xs {
+    @include body-xs;
+  }
+
+  a {
+    @include link-styles;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: 1.25em;
+  }
+
+  li {
+    margin-block-end: 0.4em;
+
+    > p {
+      margin: 0;
+    }
+  }
+
+  blockquote {
+    @include body-lg;
+    margin: #{fluid(24, 40)} 0;
+    padding-inline-start: #{fluid(16, 24)};
+    border-inline-start: 3px solid currentColor;
+    font-style: italic;
+
+    p:last-child {
+      margin: 0;
+    }
+  }
+
+  hr {
+    margin: #{fluid(32, 48)} 0;
+    border: 0;
+    border-block-start: 1px solid var(--borderColour, currentColor);
+  }
+}

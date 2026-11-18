@@ -1,0 +1,21 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import InnerHero from '../../../ui/components/InnerHero/InnerHero.astro'
+import type { BlockExtraProps } from '../../storyblok'
+import type { InnerHero as InnerHeroModel } from '../../types/gen/components/storyblok-components'
+import { backgroundTint, imageModel, sectionId, sectionTheme } from '../../utils/blocks'
+
+type Props = StoryblokBlockComponentProps<InnerHeroModel, BlockExtraProps>
+
+const { block, editable } = Astro.props
+---
+
+<InnerHero
+  title={block.title}
+  introduction={block.introduction}
+  backgroundImage={imageModel(block.background_image)}
+  backgroundTint={backgroundTint(block.background_tint)}
+  theme={sectionTheme(block.theme)}
+  id={sectionId(block.anchor_id)}
+  {...editable}
+/>

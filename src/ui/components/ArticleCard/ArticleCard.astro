@@ -1,0 +1,118 @@
+---
+import type { ImageModel } from '../../types'
+import Image from '../Image/Image.astro'
+
+// An article in the article listing. The whole card is one link (the title's, stretched over the card).
+type Props = {
+  title: string
+  description?: string
+  href: string
+  /** The link goes to another site */
+  external?: boolean
+  /** Text for screen readers after the title of an external link, e.g. "(opens another site)" */
+  externalLabel?: string
+  /** The published date, formatted */
+  date?: string
+  /** The published date as ISO, for `<time datetime>` */
+  dateTime?: string
+  image?: ImageModel
+}
+
+const { title, description, href, external, externalLabel, date, dateTime, image } = Astro.props
+---
+
+<article class="card">
+  {image && <Image image={image} ratio={[3, 2]} sizes="(min-width: 768px) 33vw, 100vw" minWidth={400} maxWidth={1200} steps={4} class="image" />}
+  <div class="body">
+    {date && <time datetime={dateTime} class="date">{date}</time>}
+    <h2 class="title">
+      <a href={href} rel={external ? 'noopener' : undefined}>
+        {title}
+        {external && <span class="external" aria-hidden="true">↗</span>}
+        {external && externalLabel && <span class="sr-only">{externalLabel}</span>}
+      </a>
+    </h2>
+    {description && <p class="description">{description}</p>}
+  </div>
+</article>
+
+<style lang="scss">
+  @use '@styles/functions/animate' as *;
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--borderColour);
+
+    // The card is one link: hovering anywhere on it, or focusing its link from the keyboard, underlines the title
+    @media (hover: hover) and (pointer: fine) {
+      &:hover .title a {
+        text-decoration-color: currentColor;
+      }
+    }
+
+    &:has(a:focus-visible) {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+
+      .title a {
+        text-decoration-color: currentColor;
+      }
+    }
+  }
+
+  .card :global(.image) {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: #{fluid(8, 12)};
+    padding: #{fluid(16, 24)};
+  }
+
+  .date {
+    @include body-sm;
+    order: -1;
+    color: var(--mutedColour);
+  }
+
+  .title {
+    @include h5;
+
+    a {
+      @include transition(text-decoration-color, 0.2s);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+      text-decoration-color: transparent;
+
+      // The link covers the card
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      &:focus-visible {
+        outline: none;
+      }
+    }
+  }
+
+  .external {
+    font-family: system-ui, sans-serif;
+    font-size: 0.6em;
+    vertical-align: super;
+  }
+
+  .description {
+    @include body;
+  }
+</style>

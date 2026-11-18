@@ -1,0 +1,36 @@
+{
+  "site": {
+    "name": "Storyblok Test"
+  },
+  "meta": {
+    "title": "{title} | {site}"
+  },
+  "header": {
+    "skip_link": "Skip to content",
+    "nav_label": "Main",
+    "menu_label": "Menu"
+  },
+  "footer": {
+    "nav_label": "Footer",
+    "social_label": "Follow us"
+  },
+  "social": {
+    "twitter": "Twitter",
+    "instagram": "Instagram",
+    "youtube": "YouTube"
+  },
+  "article": {
+    "empty": "There are no articles yet.",
+    "external_label": "(opens another site)"
+  },
+  "pagination": {
+    "label": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pages}"
+  },
+  "not_found": {
+    "title": "Page not found",
+    "text": "The page you are looking for has moved or no longer exists."
+  }
+}

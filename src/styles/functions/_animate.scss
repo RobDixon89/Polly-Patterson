@@ -1,0 +1,250 @@
+// Animation helpers. Use `transition()` for every transition so it only runs without
+// `prefers-reduced-motion: reduce`; `animate()` and the `fade-in-*` mixins animate when an ancestor (or, with
+// `$selector: element`, the element) has `data-animate="true"`, which `SectionWrapper` sets on scroll.
+
+@use 'sass:list';
+@use 'sass:meta';
+@use 'sass:string';
+
+@mixin shouldAnimate() {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+@mixin applyAnimationProperties($properties) {
+  @if meta.type-of($properties) == 'map' {
+    @each $property, $value in $properties {
+      #{$property}: #{$value};
+    }
+  }
+}
+
+@function animationPropertyList($properties) {
+  @if meta.type-of($properties) == 'string' {
+    @return $properties;
+  }
+
+  @if meta.type-of($properties) == 'list' {
+    @return $properties;
+  }
+
+  @if meta.type-of($properties) == 'map' {
+    $property-list: ();
+
+    @each $property, $value in $properties {
+      $property-list: list.append($property-list, $property, comma);
+    }
+
+    @return $property-list;
+  }
+
+  @return null;
+}
+
+@function animationTransform($default-transform, $effect-transform) {
+  @if $default-transform == none {
+    @return $effect-transform;
+  }
+
+  @return string.unquote('#{$default-transform} #{$effect-transform}');
+}
+
+@mixin transition(
+  $properties,
+  $duration: 0.6s,
+  $delay: 0s,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-properties: ()
+) {
+  @include applyAnimationProperties($default-properties);
+
+  @include shouldAnimate() {
+    $transition-properties: animationPropertyList($properties);
+
+    @if $transition-properties != null {
+      transition-duration: $duration;
+      transition-property: #{$transition-properties};
+      transition-timing-function: $timing;
+      will-change: #{$transition-properties};
+
+      @if $delay != 0s {
+        transition-delay: $delay;
+      }
+    }
+  }
+}
+
+@mixin animate(
+  $initial-properties: (),
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-properties: (),
+  $transition-properties: null
+) {
+  $animate-selector: '[data-animate="true"] &';
+  $resolved-transition-properties: null;
+
+  @if $selector == element {
+    $animate-selector: '&[data-animate="true"]';
+  }
+
+  @if $transition-properties == null {
+    $resolved-transition-properties: animationPropertyList($initial-properties);
+  } @else {
+    $resolved-transition-properties: $transition-properties;
+  }
+
+  @include applyAnimationProperties($default-properties);
+  @include applyAnimationProperties($initial-properties);
+
+  @include shouldAnimate() {
+    @if $resolved-transition-properties != null {
+      @include transition(
+        $resolved-transition-properties,
+        $duration,
+        $delay,
+        $timing
+      );
+    }
+
+    #{$animate-selector} {
+      @include applyAnimationProperties($default-properties);
+      @content;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    @include applyAnimationProperties($default-properties);
+  }
+}
+
+@mixin fade-in(
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1)
+) {
+  @include animate(
+    (
+      opacity: 0.01,
+    ),
+    $selector,
+    $duration,
+    $delay,
+    $timing,
+    (
+      opacity: 1,
+    )
+  );
+}
+
+@mixin fade-in-up(
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $distance: 20px,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-transform: none
+) {
+  @include animate(
+    (
+      opacity: 0.01,
+      transform: animationTransform(
+          $default-transform,
+          string.unquote('translateY(#{$distance})')
+        ),
+    ),
+    $selector,
+    $duration,
+    $delay,
+    $timing,
+    (
+      opacity: 1,
+      transform: $default-transform,
+    )
+  );
+}
+
+@mixin fade-in-down(
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $distance: 20px,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-transform: none
+) {
+  @include animate(
+    (
+      opacity: 0.01,
+      transform: animationTransform(
+          $default-transform,
+          string.unquote('translateY(-#{$distance})')
+        ),
+    ),
+    $selector,
+    $duration,
+    $delay,
+    $timing,
+    (
+      opacity: 1,
+      transform: $default-transform,
+    )
+  );
+}
+
+@mixin fade-in-left(
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $distance: 20px,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-transform: none
+) {
+  @include animate(
+    (
+      opacity: 0.01,
+      transform: animationTransform(
+          $default-transform,
+          string.unquote('translateX(#{$distance})')
+        ),
+    ),
+    $selector,
+    $duration,
+    $delay,
+    $timing,
+    (
+      opacity: 1,
+      transform: $default-transform,
+    )
+  );
+}
+
+@mixin fade-in-right(
+  $selector: parent,
+  $duration: 0.6s,
+  $delay: 0s,
+  $distance: 20px,
+  $timing: cubic-bezier(0.33, 1, 0.68, 1),
+  $default-transform: none
+) {
+  @include animate(
+    (
+      opacity: 0.01,
+      transform: animationTransform(
+          $default-transform,
+          string.unquote('translateX(-#{$distance})')
+        ),
+    ),
+    $selector,
+    $duration,
+    $delay,
+    $timing,
+    (
+      opacity: 1,
+      transform: $default-transform,
+    )
+  );
+}

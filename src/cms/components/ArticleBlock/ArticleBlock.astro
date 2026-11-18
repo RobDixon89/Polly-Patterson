@@ -1,0 +1,25 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import InnerHero from '../../../ui/components/InnerHero/InnerHero.astro'
+import { StoryblokBlock, type BlockExtraProps } from '../../storyblok'
+import type { Article } from '../../types/gen/components/storyblok-components'
+import { imageModel, linkHref } from '../../utils/blocks'
+import { formatDate } from '../../utils/dates'
+
+// An article: a fixed inner hero from its own fields, then its sections, unless it links to another site.
+type Props = StoryblokBlockComponentProps<Article, BlockExtraProps>
+
+const { block, editable, url } = Astro.props
+const external = linkHref(block.external_url)
+---
+
+<div {...editable}>
+  <InnerHero
+    title={block.title}
+    description={block.description}
+    eyebrow={formatDate(block.published_date)}
+    backgroundImage={imageModel(block.image)}
+    theme="dark"
+  />
+  {!external && block.body?.map((section) => <StoryblokBlock block={section} url={url} />)}
+</div>
