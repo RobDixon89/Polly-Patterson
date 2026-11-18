@@ -16,12 +16,85 @@ type Props = {
 const { document, theme, backgroundImage, id, ...attrs } = Astro.props
 ---
 
-<SectionWrapper id={id} theme={theme} backgroundImage={backgroundImage} {...attrs}>
+<SectionWrapper class="rich-text-section" id={id} theme={theme} backgroundImage={backgroundImage} {...attrs}>
   <RichText document={document} class="rich-text" />
 </SectionWrapper>
 
-<style>
-  :global(.rich-text) {
-    max-inline-size: 800px;
+<style lang="scss">
+  @use '@styles/functions/media' as *;
+  @use '@styles/functions/animate' as *;
+  
+  .rich-text-section {
+    overflow: clip;
+
+    :global(.inner) {
+      display: grid;
+
+      @include from($bp-tablet) { 
+        grid-template-columns: repeat(12, 1fr);
+      }
+    }
+
+    :global(.rich-text) {
+      @include from($bp-tablet) {
+        grid-column: 2 / -2;
+      }
+
+      @include from($bp-tablet-large) {
+        grid-column: 3 / -3;
+      }
+
+      @include from($bp-desktop-large) {
+        grid-column: 4 / -4;
+      }
+    }
+
+    :global(.image-row) {
+      @include from($bp-tablet) {
+        --adjustment: 12 / 10;
+
+        grid-column: 2 / -2;
+        width: calc(100% * var(--adjustment));
+        margin-inline: calc((100% - 100% * var(--adjustment)) / 2);
+      }
+
+      
+      @include shouldAnimate() {
+        --rotation: 16deg;
+        --minus: calc(-1 * var(--viewProgress, 0));
+        --movement: 20vw;
+        
+        --movePositive: calc(var(--movement) + (var(--movement) * var(--minus)));
+        --pullLeft: translateX(var(--movePositive)) scale(var(--minus)) rotate(calc(var(--rotation) - (var(--viewProgress) * var(--rotation))));
+        --pullRight: translateX(calc(var(--movement) * var(--viewProgress, 0) - var(--movement))) scale(var(--minus)) rotate(calc((var(--viewProgress) * var(--rotation)) - var(--rotation)));
+
+        :global(img) {
+          opacity: var(--viewProgress, 0);
+          transform: scale(var(--minus));
+
+          &:nth-child(3) {
+            transform: var(--pullLeft);
+          }
+        }
+
+        &:has(:global(img:nth-child(2))) {
+          :global(img) {
+            &:nth-child(1) {
+              transform: var(--pullRight)
+            }
+
+            &:nth-child(2) {
+              transform: var(--pullLeft);
+            }
+          }
+        }
+        
+        &:has(:global(img:nth-child(3))) {
+          :global(img):nth-child(2) {
+            transform: translateY(var(--movePositive)) scale(var(--minus));
+          }
+        }
+      }
+    }
   }
 </style>
