@@ -1,0 +1,117 @@
+---
+import type { ButtonVariant } from '../../types'
+
+// A button, or a link that looks like one: with `href` it's an <a>, otherwise a <button>. A link to another site, or
+// one that opens in a new tab, gets the external icon automatically; pass `externalLabel` so screen readers hear it too.
+type Props = {
+  variant?: ButtonVariant
+  /** Makes it a link */
+  href?: string
+  target?: '_blank'
+  /** For a <button>: its type (default `button`) */
+  type?: 'button' | 'submit' | 'reset'
+  /** Screen reader text after the label when the link is external, e.g. "(opens in a new tab)" */
+  externalLabel?: string
+  class?: string
+  [attr: string]: unknown
+}
+
+const { variant = 'primary', href, target, type = 'button', externalLabel, class: className, ...attrs } = Astro.props
+const external = !!href && (target === '_blank' || /^(https?:)?\/\//.test(href))
+const Tag = href ? 'a' : 'button'
+const elementAttrs = href
+  ? { href, target, rel: external ? 'noopener' : undefined }
+  : { type }
+---
+
+<Tag class:list={['button', className]} data-variant={variant} {...elementAttrs} {...attrs}>
+  <span class="label"><slot /></span>
+  {
+    external && (
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path
+          d="M10 4.5H7A2.5 2.5 0 0 0 4.5 7v10A2.5 2.5 0 0 0 7 19.5h10a2.5 2.5 0 0 0 2.5-2.5v-3M13 11l6.5-6.5M14 4.5h5.5V10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    )
+  }
+  {external && externalLabel && <span class="sr-only">{externalLabel}</span>}
+</Tag>
+
+<style lang="scss">
+  @use '@styles/functions/animate' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .button {
+    @include body;
+    @include transition((background-color, color, border-color), 0.2s);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-block-size: 2.75rem;
+    padding-block: var(--buttonPaddingBlock, 0.6em);
+    padding-inline: var(--buttonPaddingInline, 1.4em);
+    font-weight: 700;
+    text-decoration: none;
+    border: var(--buttonBorderWidth, 2px) solid var(--fgColour);
+    border-radius: var(--buttonBorderRadius, 999px);
+    cursor: pointer;
+
+    // Filled in the text colour, so it's always the opposite of the section's background
+    &[data-variant='primary'] {
+      color: var(--bgColour);
+      background-color: var(--fgColour);
+
+      @include hover-focus {
+        border-color: color-mix(in srgb, var(--fgColour) 82%, var(--bgColour));
+        color: var(--fgColour);
+      }
+    }
+
+    // A border in the text colour; hover and focus add a semi-transparent fill
+    &[data-variant='outline'] {
+      color: var(--fgColour);
+      background-color: transparent;
+    }
+
+    &[data-variant='primary'],
+    &[data-variant='outline'] {
+      .label {
+        transform: translateY(5%);
+      }
+
+      @include hover-focus {
+        background-color: color-mix(in srgb, var(--fgColour) 14%, transparent);
+      }
+    }
+
+    &[data-variant='text'] {
+      @include transition((text-decoration-color), 0.2s);
+
+      --buttonBorderWidth: 0;
+      --buttonPaddingInline: 0;
+      --buttonPaddingBlock: 0;
+      --buttonBorderRadius: 0;
+
+      color: var(--fgColour);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: currentColor;
+
+      @include hover-focus {
+        text-decoration-color: transparent;
+      }
+    }
+  }
+
+  .icon {
+    flex-shrink: 0;
+  }
+</style>

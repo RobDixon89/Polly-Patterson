@@ -76,6 +76,14 @@ Fixed UI text (labels, `aria-label`s, empty states) is in `src/i18n/en_GB.json`.
 `Astro.locals.t('key')`. Editors change it in the `strings` datasource, which overrides the JSON within about a minute.
 Add a key only when a component needs it, then run `pnpm cms:strings`.
 
+## Styles
+
+- In a rule, one-line `@include` statements (`@include body;`, `@include transition(color, 0.2s);`) come first, before
+  any properties. Includes with a block (`@include hover-focus { … }`, `@include from($bp-tablet) { … }`) are nested
+  rules and go after the properties.
+- Every transition goes through `transition()` (`functions/_animate.scss`), so none run with reduced motion.
+- Hover styles go through `hover-focus` (`functions/_media.scss`), so keyboard focus gets them too.
+
 ## Not done yet
 
 - No deployment adapter: `astro build` needs one (e.g. `@astrojs/node`) before this goes anywhere.

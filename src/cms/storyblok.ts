@@ -5,8 +5,10 @@ import ArticleListingBlock from './components/ArticleListingBlock/ArticleListing
 import GlobalSettingsBlock from './components/GlobalSettingsBlock/GlobalSettingsBlock.astro'
 import HomeHeroBlock from './components/HomeHeroBlock/HomeHeroBlock.astro'
 import InnerHeroBlock from './components/InnerHeroBlock/InnerHeroBlock.astro'
+import LatestArticlesBlock from './components/LatestArticlesBlock/LatestArticlesBlock.astro'
 import PageBlock from './components/PageBlock/PageBlock.astro'
 import RichTextBlock from './components/RichTextBlock/RichTextBlock.astro'
+import SplitContentBlock from './components/SplitContentBlock/SplitContentBlock.astro'
 
 export const apiClient = createApiClient({
   accessToken: import.meta.env.STORYBLOK_DELIVERY_API_TOKEN,
@@ -16,7 +18,8 @@ export const apiClient = createApiClient({
 /** Extra props every block gets: the request's URL (for the article listing's page number and links). */
 export type BlockExtraProps = { url: URL }
 
-// One entry per block with an adapter, keyed by its technical name. `nav_link` has none: the header and footer render it.
+// One entry per block with an adapter, keyed by its technical name. `nav_link` (header and footer) and `image_row`
+// (rich text) have none: what holds them renders them.
 export const { StoryblokBlock } = defineStoryblokBlocks<BlockExtraProps>(() => ({
   components: {
     page: PageBlock,
@@ -26,5 +29,7 @@ export const { StoryblokBlock } = defineStoryblokBlocks<BlockExtraProps>(() => (
     home_hero: HomeHeroBlock,
     inner_hero: InnerHeroBlock,
     rich_text: RichTextBlock,
+    split_content: SplitContentBlock,
+    latest_articles: LatestArticlesBlock,
   },
 }))

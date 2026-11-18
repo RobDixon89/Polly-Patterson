@@ -1,0 +1,30 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import LatestArticles from '../../../ui/components/LatestArticles/LatestArticles.astro'
+import type { BlockExtraProps } from '../../storyblok'
+import type { LatestArticles as LatestArticlesModel } from '../../types/gen/components/storyblok-components'
+import { backgroundTint, imageModel, sectionId, sectionTheme } from '../../utils/blocks'
+import { ARTICLES_FOLDER, articleCard, listArticles } from '../../utils/stories'
+
+type Props = StoryblokBlockComponentProps<LatestArticlesModel, BlockExtraProps>
+
+const { block, editable } = Astro.props
+const { articles } = await listArticles(ARTICLES_FOLDER, 1, Astro.locals.version, 4)
+---
+
+{
+  articles.length > 0 && (
+    <LatestArticles
+      title={block.title}
+      description={block.description}
+      articles={articles.map((story) => ({ key: story.uuid, ...articleCard(story) }))}
+      viewAllHref={`/${ARTICLES_FOLDER}`}
+      viewAllLabel={block.view_all_label}
+      theme={sectionTheme(block.theme)}
+      backgroundImage={imageModel(block.background_image)}
+      backgroundTint={backgroundTint(block.background_tint)}
+      id={sectionId(block.anchor_id)}
+      {...editable}
+    />
+  )
+}

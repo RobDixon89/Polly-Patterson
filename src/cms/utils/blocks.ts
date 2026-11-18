@@ -3,8 +3,11 @@
 import {
   BACKGROUND_TINT_DEFAULT,
   BACKGROUND_TINTS,
+  BUTTON_VARIANTS,
   SECTION_THEMES,
   type BackgroundTint,
+  type ButtonVariant,
+  type CtaModel,
   type ImageModel,
   type LinkModel,
   type SectionTheme,
@@ -106,6 +109,26 @@ export const linkModel = (block: { text?: string; link?: StoryblokMultilink }): 
     return undefined
   }
   return { text: block.text, href, ...(block.link?.target === '_blank' ? { target: '_blank' as const } : {}) }
+}
+
+/**
+ * A `cta` block as a `CtaModel`, or undefined without text or a link. `labels` are the screen reader texts for links
+ * that open a new tab or another site.
+ */
+export const ctaModel = (
+  block: { text?: string; link?: StoryblokMultilink; style?: string },
+  labels: { newTab: string; external: string },
+): CtaModel | undefined => {
+  const link = linkModel(block)
+  if (!link) {
+    return undefined
+  }
+  const externalLabel = link.target === '_blank' ? labels.newTab : isExternal(link.href) ? labels.external : undefined
+  return {
+    ...link,
+    variant: BUTTON_VARIANTS.includes(block.style as ButtonVariant) ? (block.style as ButtonVariant) : BUTTON_VARIANTS[0],
+    ...(externalLabel ? { externalLabel } : {}),
+  }
 }
 
 /**

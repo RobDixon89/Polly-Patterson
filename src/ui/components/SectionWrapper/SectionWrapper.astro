@@ -228,6 +228,8 @@ import { BACKGROUND_TINT_DEFAULT, BACKGROUND_TINTS, SECTION_THEMES, type Backgro
     background-color: var(--bgColour);
     color: var(--fgColour);
     scroll-margin-block-start: var(--headerHeight, 0);
+    // The breakpoint mixins' container queries resolve against the section, so layouts work outside <main> too (Storybook)
+    container-type: inline-size;
   }
 
   // Clipped so the image stays in the section's box while it's there (no shared layer)

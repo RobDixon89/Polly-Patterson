@@ -1,4 +1,4 @@
-import { richTextDocument, squareImage, wideImage } from '../../fixtures'
+import { imageRowDocument, richTextDocument, squareImage, wideImage } from '../../fixtures'
 import { BACKGROUND_TINTS } from '../../types'
 import RichTextSection from './RichTextSection.astro'
 
@@ -31,3 +31,10 @@ export const TintNone = { args: { theme: 'dark', backgroundImage: wideImage, bac
 export const TintLight = { args: { theme: 'dark', backgroundImage: wideImage, backgroundTint: 'light' } }
 
 export const TintStrong = { args: { theme: 'light', backgroundImage: wideImage, backgroundTint: 'strong' } }
+
+// An image row embedded in the text: one, two or three images, always in one row, each cropped and sized for its share
+export const OneImageRow = { args: { document: imageRowDocument(1) } }
+
+export const TwoImageRow = { args: { document: imageRowDocument(2) } }
+
+export const ThreeImageRow = { args: { document: imageRowDocument(3) } }

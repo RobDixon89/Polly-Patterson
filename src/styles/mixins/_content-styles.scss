@@ -129,3 +129,38 @@
     border-block-start: 1px solid var(--borderColour, currentColor);
   }
 }
+
+// Round buttons (social links, "view all"): on hover and focus a circle in the text colour grows from the centre until
+// it fills the button, and the content turns the background colour. Set the size on the element.
+@mixin circle-fill-hover($duration: 0.3s) {
+  @include transition((border-color, color), $duration);
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--fgColour);
+  text-decoration: none;
+  border: 1px solid var(--borderColour);
+  border-radius: 50%;
+  isolation: isolate;
+
+  &::before {
+    @include transition(transform, $duration);
+    content: '';
+    position: absolute;
+    inset: -3px;
+    z-index: -1;
+    background-color: var(--fgColour);
+    border-radius: 50%;
+    transform: scale(0);
+  }
+
+  @include hover-focus {
+    color: var(--bgColour);
+    border-color: var(--fgColour);
+
+    &::before {
+      transform: scale(1);
+    }
+  }
+}

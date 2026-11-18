@@ -14,6 +14,8 @@ export const FREE_AREA_SECTIONS: FreeAreaSection[] = [
   { name: 'home_hero', banner: true },
   { name: 'inner_hero', banner: true },
   { name: 'rich_text' },
+  { name: 'split_content' },
+  { name: 'latest_articles' },
 ]
 
 /** The block names a free area allows: every section but the banners. */

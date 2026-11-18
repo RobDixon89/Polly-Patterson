@@ -60,13 +60,13 @@ const { page, hrefs, pageLabels, label, previousLabel, nextLabel } = Astro.props
   }
 
   ol a {
+    @include transition(border-color, 0.2s);
     display: grid;
     place-items: center;
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
     text-decoration: none;
     border: 1px solid transparent;
-    @include transition(border-color, 0.2s);
 
     &[aria-current='page'] {
       border-color: currentColor;

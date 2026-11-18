@@ -1,6 +1,8 @@
 // The content lookups: one function per content type, so routes and adapters never build API queries themselves.
 import type { Story } from '@storyblok/api-client'
 import { apiClient } from '../storyblok'
+import { imageModel, isExternal, linkHref, storyblokDateTime } from './blocks'
+import { formatDate } from './dates'
 import type { Article, GlobalSettings } from '../types/gen/components/storyblok-components'
 
 /** Draft content in the Visual Editor (the access token is the space's preview token), published content otherwise. */
@@ -11,6 +13,9 @@ export const GLOBAL_SETTINGS_SLUG = 'global/settings'
 
 /** Articles per listing page */
 export const ARTICLES_PER_PAGE = 9
+
+/** The folder holding the articles, whose start page is the article listing (Latest Articles links there) */
+export const ARTICLES_FOLDER = 'articles'
 
 /**
  * A story by its full slug, or undefined when there's none. A folder's start page (`articles/`) is also found by the
@@ -36,14 +41,19 @@ export type ArticlePage = {
 }
 
 /** One page of a folder's articles, newest first. */
-export const listArticles = async (folder: string, page: number, version: Version): Promise<ArticlePage> => {
+export const listArticles = async (
+  folder: string,
+  page: number,
+  version: Version,
+  perPage = ARTICLES_PER_PAGE,
+): Promise<ArticlePage> => {
   const { data, response } = await apiClient.stories.list({
     query: {
       version,
       starts_with: `${folder.replace(/\/$/, '')}/`,
       content_type: 'article',
       sort_by: 'content.published_date:desc',
-      per_page: ARTICLES_PER_PAGE,
+      per_page: perPage,
       page,
       resolve_links: 'url',
       // The card only needs the fields above the sections
@@ -51,8 +61,23 @@ export const listArticles = async (folder: string, page: number, version: Versio
     },
   })
   const total = Number(response.headers.get('total')) || 0
-  return { articles: data?.stories ?? [], pages: Math.max(1, Math.ceil(total / ARTICLES_PER_PAGE)) }
+  return { articles: data?.stories ?? [], pages: Math.max(1, Math.ceil(total / perPage)) }
 }
 
 /** An article's content, typed */
 export const articleContent = (story: Story) => story.content as Article
+
+/** An article story as `ArticleCard` props: an article with an external URL links there */
+export const articleCard = (story: Story) => {
+  const article = articleContent(story)
+  const href = linkHref(article.external_url) ?? `/${story.full_slug}`
+  return {
+    title: article.title || story.name,
+    description: article.description,
+    href,
+    external: isExternal(href),
+    date: formatDate(article.published_date),
+    dateTime: storyblokDateTime(article.published_date),
+    image: imageModel(article.image),
+  }
+}

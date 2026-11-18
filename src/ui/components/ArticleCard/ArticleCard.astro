@@ -2,7 +2,8 @@
 import type { ImageModel } from '../../types'
 import Image from '../Image/Image.astro'
 
-// An article in the article listing. The whole card is one link (the title's, stretched over the card).
+// An article card. The whole card is one link (the title's, stretched over the card). `feature` makes it a wide card
+// with the image beside the text from tablet width up (Latest Articles' first article).
 type Props = {
   title: string
   description?: string
@@ -16,22 +17,33 @@ type Props = {
   /** The published date as ISO, for `<time datetime>` */
   dateTime?: string
   image?: ImageModel
+  feature?: boolean
+  /** The title's heading level: 3 inside a section that has its own heading */
+  headingLevel?: 2 | 3
 }
 
-const { title, description, href, external, externalLabel, date, dateTime, image } = Astro.props
+const { title, description, href, external, externalLabel, date, dateTime, image, feature = false, headingLevel = 2 } = Astro.props
+const Heading = `h${headingLevel}` as 'h2' | 'h3'
 ---
 
-<article class="card">
-  {image && <Image image={image} ratio={[3, 2]} sizes="(min-width: 768px) 33vw, 100vw" minWidth={400} maxWidth={1200} steps={4} class="image" />}
+<article class:list={['card', feature && 'feature']}>
+  {
+    image &&
+      (feature ? (
+        <Image image={image} ratio={[16, 9]} sizes="(min-width: 768px) 60vw, 100vw" minWidth={480} maxWidth={1600} steps={4} class="image" />
+      ) : (
+        <Image image={image} ratio={[3, 2]} sizes="(min-width: 768px) 33vw, 100vw" minWidth={400} maxWidth={1200} steps={4} class="image" />
+      ))
+  }
   <div class="body">
     {date && <time datetime={dateTime} class="date">{date}</time>}
-    <h2 class="title">
+    <Heading class="title">
       <a href={href} rel={external ? 'noopener' : undefined}>
         {title}
         {external && <span class="external" aria-hidden="true">↗</span>}
         {external && externalLabel && <span class="sr-only">{externalLabel}</span>}
       </a>
-    </h2>
+    </Heading>
     {description && <p class="description">{description}</p>}
   </div>
 </article>
@@ -39,6 +51,7 @@ const { title, description, href, external, externalLabel, date, dateTime, image
 <style lang="scss">
   @use '@styles/functions/animate' as *;
   @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
   @use '@styles/mixins/typography' as *;
 
   .card {
@@ -68,6 +81,25 @@ const { title, description, href, external, externalLabel, date, dateTime, image
     inline-size: 100%;
     block-size: auto;
     aspect-ratio: 3 / 2;
+  }
+
+  // The feature card: image (60%) beside the text from tablet width up, a larger title
+  .feature {
+    @include from($bp-tablet) {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      align-items: center;
+    }
+
+    :global(.image) {
+      aspect-ratio: 16 / 9;
+      block-size: 100%;
+      object-fit: cover;
+    }
+
+    .title {
+      @include h3;
+    }
   }
 
   .body {
