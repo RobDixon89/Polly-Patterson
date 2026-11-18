@@ -1,0 +1,113 @@
+---
+import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import { splitImageTiles } from '../../imageLayouts'
+import type { CtaModel, ImageModel, SectionTheme } from '../../types'
+import Button from '../Button/Button.astro'
+import Image from '../Image/Image.astro'
+import RichText from '../RichText/RichText.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// Text and up to two CTAs beside up to four images in a square frame (layouts in ui/imageLayouts.ts). From tablet width up the images sit
+// on the left or right; on mobile they follow the text.
+type Props = {
+  title: string
+  content?: StoryblokRichtext
+  images: ImageModel[]
+  /** Up to two; more are left out */
+  ctas?: CtaModel[]
+  alignment?: 'left' | 'right'
+  theme?: SectionTheme
+  id?: string
+  [attr: string]: unknown
+}
+
+const { title, content, images, ctas = [], alignment = 'left', theme, id, ...attrs } = Astro.props
+const tiles = splitImageTiles(images.length)
+---
+
+<SectionWrapper id={id} theme={theme} {...attrs}>
+  <div class="split" data-align={alignment}>
+    <div class="text">
+      <h2>{title}</h2>
+      <RichText document={content} class="split-content" />
+      {
+        ctas.length > 0 && (
+          <div class="ctas">
+            {ctas.slice(0, 2).map((cta) => (
+              <Button variant={cta.variant} href={cta.href} target={cta.target} externalLabel={cta.externalLabel}>
+                {cta.text}
+              </Button>
+            ))}
+          </div>
+        )
+      }
+    </div>
+    {
+      tiles.length > 0 && (
+        <div class="images" data-count={tiles.length}>
+          {tiles.map((tile, index) => (
+            <Image
+              image={images[index]}
+              ratio={tile.ratio}
+              sizes={tile.sizes}
+              minWidth={tile.minWidth}
+              maxWidth={tile.maxWidth}
+              steps={tile.steps}
+              class:list={['tile', tile.wide && 'wide']}
+            />
+          ))}
+        </div>
+      )
+    }
+  </div>
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+
+  .split {
+    display: grid;
+    gap: #{fluid(32, 64)};
+    align-items: center;
+
+    @include from($bp-tablet) {
+      grid-template-columns: 1fr 1fr;
+
+      &[data-align='left'] .images {
+        order: -1;
+      }
+    }
+  }
+
+  .text :global(.split-content) {
+    margin-block-start: #{fluid(16, 24)};
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: #{fluid(24, 32)};
+  }
+
+  // A square frame: one row for one or two images, two rows for three or four
+  .images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: #{fluid(8, 12)};
+    aspect-ratio: 1;
+  }
+
+  .images :global(.tile) {
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 0;
+    object-fit: cover;
+  }
+
+  .images :global(.wide) {
+    grid-column: 1 / -1;
+  }
+</style>

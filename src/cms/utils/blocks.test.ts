@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import {
   anchorId,
   backgroundTint,
+  ctaModel,
   imageModel,
   linkHref,
   linkModel,
@@ -63,6 +64,20 @@ test('linkModel needs text and a link', () => {
   const link: StoryblokMultilink = { ...base, linktype: 'url', url: 'https://x.com', target: '_blank' }
   assert.deepEqual(linkModel({ text: 'X', link }), { text: 'X', href: 'https://x.com', target: '_blank' })
   assert.equal(linkModel({ text: '', link }), undefined)
+})
+
+test('ctaModel maps a cta block and labels external links', () => {
+  const labels = { newTab: '(opens in a new tab)', external: '(opens another site)' }
+  const url = (u: string, target?: '_blank'): StoryblokMultilink => ({ ...base, linktype: 'url', url: u, target })
+  assert.deepEqual(ctaModel({ text: 'About', link: { ...base, linktype: 'story', cached_url: 'about' } }, labels), {
+    text: 'About',
+    href: '/about',
+    variant: 'primary',
+  })
+  assert.equal(ctaModel({ text: 'Docs', link: url('https://x.com'), style: 'outline' }, labels)?.externalLabel, '(opens another site)')
+  assert.equal(ctaModel({ text: 'Docs', link: url('https://x.com', '_blank') }, labels)?.externalLabel, '(opens in a new tab)')
+  assert.equal(ctaModel({ text: 'Docs', link: url('https://x.com'), style: 'loud' }, labels)?.variant, 'primary')
+  assert.equal(ctaModel({ text: '', link: url('https://x.com') }, labels), undefined)
 })
 
 test('storyblokDateTime reads Storyblok dates as UTC', () => {

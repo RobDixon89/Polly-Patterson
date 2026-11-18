@@ -6,9 +6,8 @@ import Pagination from '../../../ui/components/Pagination/Pagination.astro'
 import SectionWrapper from '../../../ui/components/SectionWrapper/SectionWrapper.astro'
 import type { BlockExtraProps } from '../../storyblok'
 import type { ArticleListing } from '../../types/gen/components/storyblok-components'
-import { imageModel, isExternal, linkHref, storyblokDateTime } from '../../utils/blocks'
-import { formatDate } from '../../utils/dates'
-import { articleContent, listArticles } from '../../utils/stories'
+import { imageModel } from '../../utils/blocks'
+import { articleCard, listArticles } from '../../utils/stories'
 
 // The article listing: an inner hero from its own fields, then the articles in its folder, newest first, a page at
 // a time (`?page=2`).
@@ -31,20 +30,7 @@ const pageHref = (number: number) => {
   return `${target.pathname}${target.search}`
 }
 
-const cards = articles.map((story) => {
-  const article = articleContent(story)
-  const href = linkHref(article.external_url) ?? `/${story.full_slug}`
-  return {
-    key: story.uuid,
-    title: article.title || story.name,
-    description: article.description,
-    href,
-    external: isExternal(href),
-    date: formatDate(article.published_date),
-    dateTime: storyblokDateTime(article.published_date),
-    image: imageModel(article.image),
-  }
-})
+const cards = articles.map((story) => ({ key: story.uuid, ...articleCard(story) }))
 ---
 
 <div {...editable}>

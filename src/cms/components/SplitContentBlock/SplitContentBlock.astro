@@ -1,0 +1,33 @@
+---
+import type { StoryblokBlockComponentProps } from '@storyblok/astro'
+import SplitContent from '../../../ui/components/SplitContent/SplitContent.astro'
+import type { CtaModel, ImageModel } from '../../../ui/types'
+import type { BlockExtraProps } from '../../storyblok'
+import type { SplitContent as SplitContentModel } from '../../types/gen/components/storyblok-components'
+import { backgroundTint, ctaModel, imageModel, sectionId, sectionTheme } from '../../utils/blocks'
+
+type Props = StoryblokBlockComponentProps<SplitContentModel, BlockExtraProps>
+
+const { block, editable } = Astro.props
+const { t } = Astro.locals
+const labels = { newTab: t('link.new_tab'), external: t('link.external') }
+const ctas = (block.ctas ?? []).map((cta) => ctaModel(cta, labels)).filter((cta): cta is CtaModel => !!cta)
+// The first four; the schema says any more are ignored
+const images = (block.images ?? [])
+  .map(imageModel)
+  .filter((image): image is ImageModel => !!image)
+  .slice(0, 4)
+---
+
+<SplitContent
+  title={block.title}
+  content={block.content}
+  images={images}
+  ctas={ctas}
+  alignment={block.image_alignment === 'right' ? 'right' : 'left'}
+  theme={sectionTheme(block.theme)}
+  backgroundImage={imageModel(block.background_image)}
+  backgroundTint={backgroundTint(block.background_tint)}
+  id={sectionId(block.anchor_id)}
+  {...editable}
+/>

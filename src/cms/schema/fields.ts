@@ -42,6 +42,18 @@ export const image = (settings: Settings = {}): SchemaField => ({
 
 export const link = (settings: Settings = {}): SchemaField => ({ type: 'multilink', ...settings })
 
+/**
+ * Several images, in the order the editor arranges them. Storyblok can't cap how many an editor picks, so the adapter
+ * uses the first `max` and the description says so.
+ */
+export const images = (max: number, settings: Settings = {}): SchemaField => ({
+  type: 'multiasset',
+  filetypes: ['images'],
+  description: `Up to ${max} images, in order; any more are ignored.`,
+  tooltip: true,
+  ...settings,
+})
+
 /** Nested blocks, limited to the given component names. */
 export const blocks = (allow: string[], settings: Settings = {}): SchemaField => ({
   type: 'bloks',
@@ -197,6 +209,21 @@ export const richTextFull = (settings: Settings = {}): SchemaField =>
     ...settings,
   })
 
+/** Blocks editors can embed in the Rich Text section's text, from the toolbar's block button */
+export const RICH_TEXT_EMBEDS = ['image_row']
+
+/**
+ * The Rich Text section's field: the full toolbar and every content style, plus embedded blocks (`RICH_TEXT_EMBEDS`,
+ * e.g. a row of images between paragraphs).
+ */
+export const richTextWithEmbeds = (settings: Settings = {}): SchemaField =>
+  richTextFull({
+    toolbar: [...RICH_TEXT_TOOLBAR_FULL, 'blok'],
+    restrict_components: true,
+    component_whitelist: RICH_TEXT_EMBEDS,
+    ...settings,
+  })
+
 /** Rich text in any other component (an introduction): the reduced toolbar and the body sizes. */
 export const richTextReduced = (settings: Settings = {}): SchemaField =>
   richText({
@@ -238,6 +265,10 @@ export const seoFields = (): Record<'seo_tab' | 'meta_title' | 'meta_description
     },
   ),
 })
+
+/** Up to `max` `cta` blocks (text, link, style), drawn as buttons */
+export const ctas = (max: number, settings: Settings = {}): SchemaField =>
+  blocks(['cta'], { display_name: max === 1 ? 'CTA' : 'CTAs', description: `Optional. Up to ${max}.`, tooltip: true, maximum: max, ...settings })
 
 /** A list of `nav_link` blocks (text + link). */
 export const navLinks = (settings: Settings = {}): SchemaField => blocks(['nav_link'], settings)

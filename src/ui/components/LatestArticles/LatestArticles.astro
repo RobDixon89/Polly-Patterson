@@ -1,0 +1,92 @@
+---
+import type { ComponentProps } from 'astro/types'
+import type { SectionTheme } from '../../types'
+import ArticleCard from '../ArticleCard/ArticleCard.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// The newest articles: the first as a full-width feature card, up to three more in a row beneath, then a round
+// "view all" button to the listing, centred.
+type Card = Omit<ComponentProps<typeof ArticleCard>, 'feature' | 'headingLevel'>
+type Props = {
+  title: string
+  description?: string
+  /** The newest first; only the first four are shown */
+  articles: Card[]
+  viewAllHref: string
+  viewAllLabel: string
+  theme?: SectionTheme
+  id?: string
+  [attr: string]: unknown
+}
+
+const { title, description, articles, viewAllHref, viewAllLabel, theme, id, ...attrs } = Astro.props
+const [feature, ...rest] = articles.slice(0, 4)
+---
+
+<SectionWrapper id={id} theme={theme} {...attrs}>
+  <div class="intro">
+    <h2>{title}</h2>
+    {description && <p class="description">{description}</p>}
+  </div>
+  {feature && <ArticleCard {...feature} feature headingLevel={3} />}
+  {
+    rest.length > 0 && (
+      <ul class="row">
+        {rest.map((card) => (
+          <li>
+            <ArticleCard {...card} headingLevel={3} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  <a href={viewAllHref} class="view-all">{viewAllLabel}</a>
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/content-styles' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .intro {
+    max-inline-size: 800px;
+    margin-block-end: #{fluid(32, 48)};
+  }
+
+  .description {
+    @include body-lg;
+    margin-block-start: #{fluid(12, 16)};
+  }
+
+  .row {
+    display: grid;
+    gap: #{fluid(24, 32)};
+    margin: #{fluid(24, 32)} 0 0;
+    padding: 0;
+    list-style: none;
+
+    @include from($bp-tablet) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    li {
+      display: flex;
+
+      > :global(*) {
+        flex: 1;
+      }
+    }
+  }
+
+  .view-all {
+    @include circle-fill-hover;
+    @include body-lg;
+    inline-size: #{fluid(112, 136)};
+    block-size: #{fluid(112, 136)};
+    margin: #{fluid(40, 64)} auto 0;
+    padding: 1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+</style>

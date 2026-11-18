@@ -35,10 +35,10 @@ const editable = ownSettings ? storyblokEditable(ownSettings as { _editable?: st
 const links = (items: GlobalSettings['footer_links']): LinkModel[] =>
   (items ?? []).map(linkModel).filter((link): link is LinkModel => !!link)
 
-const NETWORKS: SocialNetwork[] = ['twitter', 'instagram', 'youtube']
+const NETWORKS: SocialNetwork[] = ['twitter', 'instagram', 'youtube', 'substack', 'bluesky']
 const social = NETWORKS.flatMap((network) => {
   const href = linkHref(settings?.[`${network}_url`])
-  return href ? [{ network, href, label: t(`social.${network}`) }] : []
+  return href ? [{ network, href, label: `${t(`social.${network}`)} ${t('link.new_tab')}` }] : []
 })
 
 const siteName = t('site.name')

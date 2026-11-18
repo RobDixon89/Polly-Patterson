@@ -1,6 +1,7 @@
 ---
 import { StoryblokRichText, type StoryblokAstroRichTextComponentMap } from '@storyblok/astro'
 import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import RichTextBlok from './RichTextBlok.astro'
 import RichTextLink from './RichTextLink.astro'
 import RichTextParagraph from './RichTextParagraph.astro'
 
@@ -8,7 +9,7 @@ import RichTextParagraph from './RichTextParagraph.astro'
 type Props = { document: StoryblokRichtext | undefined; class?: string }
 
 const { document, class: className } = Astro.props
-const components: StoryblokAstroRichTextComponentMap = { paragraph: RichTextParagraph, link: RichTextLink }
+const components: StoryblokAstroRichTextComponentMap = { paragraph: RichTextParagraph, link: RichTextLink, blok: RichTextBlok }
 ---
 
 {

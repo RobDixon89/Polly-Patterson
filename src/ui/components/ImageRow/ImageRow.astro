@@ -1,0 +1,51 @@
+---
+import { imageRowTiles } from '../../imageLayouts'
+import type { ImageModel } from '../../types'
+import Image from '../Image/Image.astro'
+
+// Up to three images in one row, embedded in rich text. The row is always 16:9 (IMAGE_ROW_RATIO), so it's the same
+// height however many images it has; each image fills an equal share, and its crop and sizes follow from that share.
+// Storyblok images go through the Image Service; others (the stories' /img files) are used as they are.
+type Props = { images: ImageModel[] }
+
+const { images } = Astro.props
+const tiles = imageRowTiles(images.length)
+---
+
+{
+  tiles.length > 0 && (
+    <div class="image-row" data-count={tiles.length}>
+      {tiles.map((tile, index) => (
+        <Image
+          image={images[index]}
+          ratio={tile.ratio}
+          sizes={tile.sizes}
+          minWidth={tile.minWidth}
+          maxWidth={tile.maxWidth}
+          steps={tile.steps}
+          class="image-row-image"
+        />
+      ))}
+    </div>
+  )
+}
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+
+  .image-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: #{fluid(8, 12)};
+    aspect-ratio: 16 / 9;
+    margin-block: #{fluid(24, 40)};
+  }
+
+  .image-row :global(.image-row-image) {
+    inline-size: 100%;
+    block-size: 100%;
+    min-inline-size: 0;
+    object-fit: cover;
+  }
+</style>

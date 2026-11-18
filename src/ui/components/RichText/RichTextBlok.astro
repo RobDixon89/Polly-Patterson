@@ -1,0 +1,16 @@
+---
+import type { StoryblokAstroRichTextProps } from '@storyblok/astro'
+import { imageModel } from '../../../cms/utils/blocks'
+import type { StoryblokAsset } from '../../../cms/types/gen/storyblok'
+import type { ImageModel } from '../../types'
+import ImageRow from '../ImageRow/ImageRow.astro'
+
+// Blocks embedded in rich text (RICH_TEXT_EMBEDS in cms/schema/fields.ts). Only `image_row` so far; others render nothing.
+type Props = StoryblokAstroRichTextProps<'blok'>
+
+type Embedded = { component?: string; _uid?: string; images?: StoryblokAsset[] }
+const body = ((Astro.props.attrs as { body?: Embedded[] } | undefined)?.body ?? []) as Embedded[]
+const images = (block: Embedded) => (block.images ?? []).map(imageModel).filter((image): image is ImageModel => !!image)
+---
+
+{body.map((block) => (block.component === 'image_row' ? <ImageRow images={images(block)} /> : null))}
