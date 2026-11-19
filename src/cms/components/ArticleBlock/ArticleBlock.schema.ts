@@ -1,6 +1,5 @@
 import { defineComponentSchema } from '../../schema/define'
-import { datetime, freeArea, link, seoFields, sizedImage, text, textarea, tab } from '../../schema/fields'
-
+import { boolean, datetime, freeArea, link, option, seoFields, sizedImage, text, textarea, tab } from '../../schema/fields'
 // An article. Its fields fill the listing card and the article's fixed inner hero; an article with an external URL
 // links there from its card and shows no sections.
 export default defineComponentSchema({
@@ -15,6 +14,21 @@ export default defineComponentSchema({
     description: textarea({ display_name: 'Description', description: 'Shown on the card and under the title.', tooltip: true, required: true }),
     image: sizedImage([2560, 1000], { display_name: 'Image', required: true }),
     published_date: datetime({ display_name: 'Published Date', required: true, disable_time: true }),
+    // Editors add types in the Article Types datasource; the value is shown, capitalised, on the card and banner
+    type: option([], {
+      display_name: 'Type',
+      source: 'internal',
+      datasource_slug: 'article-types',
+      default_value: 'article',
+      use_uuid: false,
+      description: 'Shown on the card and the banner. Add types in the Article Types datasource.',
+      tooltip: true,
+    }),
+    exclude_from_latest: boolean({
+      display_name: 'Exclude from Latest Articles',
+      description: 'Hide this article from Latest Articles sections. It still shows in the article listing.',
+      tooltip: true,
+    }),
     external_url: link({
       display_name: 'External URL',
       description: 'Optional. When set, the card links to this address and the article shows no sections.',

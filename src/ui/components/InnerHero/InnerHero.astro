@@ -1,6 +1,8 @@
 ---
 import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
-import type { ImageModel, SectionTheme } from '../../types'
+import type { CtaModel, ImageModel, SectionTheme } from '../../types'
+import ArticleTag from '../ArticleTag/ArticleTag.astro'
+import Button from '../Button/Button.astro'
 import RichText from '../RichText/RichText.astro'
 import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
 
@@ -14,21 +16,41 @@ type Props = {
   description?: string
   /** A short line above the title, e.g. an article's date */
   eyebrow?: string
+  /** Resource tag, shown alongside the eyebrow */
+  tag?: string;
+  /** Up to two CTAs under the introduction */
+  ctas?: CtaModel[]
   backgroundImage?: ImageModel
   theme?: SectionTheme
   id?: string
   [attr: string]: unknown
 }
 
-const { title, introduction, description, eyebrow, backgroundImage, theme, id, ...attrs } = Astro.props
+const { title, introduction, description, eyebrow, tag, ctas = [], backgroundImage, theme, id, ...attrs } = Astro.props
 ---
 
 <SectionWrapper as="header" id={id} theme={theme} layout="full-width" backgroundImage={backgroundImage} eager class="hero" {...attrs}>
   <div class="site-wide body">
-    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    {eyebrow || tag ? (
+      <div class="eyebrow-tag">
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        {tag && <ArticleTag tag={tag} />}
+      </div>
+    ) : null}
     <h1>{title}</h1>
     <RichText document={introduction} class="introduction" />
     {description && <p class="introduction">{description}</p>}
+    {
+      ctas.length > 0 && (
+        <div class="ctas">
+          {ctas.slice(0, 2).map((cta) => (
+            <Button variant={cta.variant} href={cta.href} target={cta.target} externalLabel={cta.externalLabel}>
+              {cta.text}
+            </Button>
+          ))}
+        </div>
+      )
+    }
   </div>
 </SectionWrapper>
 
@@ -50,11 +72,23 @@ const { title, introduction, description, eyebrow, backgroundImage, theme, id, .
     }
   }
 
-  .eyebrow {
+  .eyebrow-tag {
     @include body-sm;
-    margin-block-end: 0.25em;
-    text-transform: uppercase;
+    display: flex;
+    gap: 8px;
     letter-spacing: 0.08em;
+    align-items: center;
+  }
+
+  .eyebrow {
+    transform: translateY(7%);
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: #{fluid(24, 32)};
   }
 
   .hero :global(.introduction) {

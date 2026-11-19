@@ -6,6 +6,8 @@ export interface Article {
   description: string;
   image: StoryblokAsset;
   published_date: string;
+  type?: number | string;
+  exclude_from_latest?: boolean;
   external_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
   content_tab?: unknown;
   body?: (RichText | SplitContent | LatestArticles)[];
@@ -21,8 +23,9 @@ export interface Article {
 
 export interface ArticleListing {
   title: string;
-  description?: string;
+  introduction?: StoryblokRichtext;
   image?: StoryblokAsset;
+  ctas?: Cta[];
   seo_tab?: unknown;
   meta_title?: string;
   meta_description?: string;
@@ -48,11 +51,7 @@ export interface GlobalSettings {
   header_right_links?: NavLink[];
   footer_tab?: unknown;
   footer_links?: NavLink[];
-  twitter_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
-  instagram_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
-  youtube_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
-  substack_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
-  bluesky_url?: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  social_links?: SocialLink[];
   copyright?: string;
   component: "global_settings";
   _uid: string;
@@ -63,6 +62,7 @@ export interface HomeHero {
   title: string;
   introduction?: StoryblokRichtext;
   image: StoryblokAsset;
+  ctas?: Cta[];
   anchor_id?: string;
   theme?: "" | "light" | "dark";
   background_image?: StoryblokAsset;
@@ -82,6 +82,7 @@ export interface ImageRow {
 export interface InnerHero {
   title: string;
   introduction?: StoryblokRichtext;
+  ctas?: Cta[];
   anchor_id?: string;
   theme?: "" | "light" | "dark";
   background_image?: StoryblokAsset;
@@ -132,6 +133,14 @@ export interface RichText {
   background_image?: StoryblokAsset;
   background_tint?: "" | "none" | "subtle" | "light" | "medium" | "strong" | "heavy";
   component: "rich_text";
+  _uid: string;
+  [k: string]: unknown;
+}
+
+export interface SocialLink {
+  network: "twitter" | "instagram" | "youtube" | "substack" | "bluesky";
+  link: Exclude<StoryblokMultilink, {linktype?: "email"} | {linktype?: "asset"}>;
+  component: "social_link";
   _uid: string;
   [k: string]: unknown;
 }

@@ -46,6 +46,8 @@ export const listArticles = async (
   page: number,
   version: Version,
   perPage = ARTICLES_PER_PAGE,
+  /** Leave out articles marked "Exclude from Latest Articles" */
+  latestOnly = false,
 ): Promise<ArticlePage> => {
   const { data, response } = await apiClient.stories.list({
     query: {
@@ -58,6 +60,8 @@ export const listArticles = async (
       resolve_links: 'url',
       // The card only needs the fields above the sections
       excluding_fields: 'body',
+      // `not_in` also keeps articles saved before the checkbox existed (no value)
+      ...(latestOnly && { filter_query: { exclude_from_latest: { not_in: 'true' } } }),
     },
   })
   const total = Number(response.headers.get('total')) || 0
@@ -67,6 +71,9 @@ export const listArticles = async (
 /** An article's content, typed */
 export const articleContent = (story: Story) => story.content as Article
 
+/** An article's type tag (a value from the `article-types` datasource); articles saved before it existed are "article" */
+export const articleType = (article: Article) => String(article.type || 'article')
+
 /** An article story as `ArticleCard` props: an article with an external URL links there */
 export const articleCard = (story: Story) => {
   const article = articleContent(story)
@@ -74,6 +81,7 @@ export const articleCard = (story: Story) => {
   return {
     title: article.title || story.name,
     description: article.description,
+    type: articleType(article),
     href,
     external: isExternal(href),
     date: formatDate(article.published_date),

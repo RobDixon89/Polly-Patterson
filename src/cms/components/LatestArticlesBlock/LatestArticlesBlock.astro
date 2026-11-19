@@ -9,7 +9,7 @@ import { ARTICLES_FOLDER, articleCard, listArticles } from '../../utils/stories'
 type Props = StoryblokBlockComponentProps<LatestArticlesModel, BlockExtraProps>
 
 const { block, editable } = Astro.props
-const { articles } = await listArticles(ARTICLES_FOLDER, 1, Astro.locals.version, 4)
+const { articles } = await listArticles(ARTICLES_FOLDER, 1, Astro.locals.version, 4, true)
 ---
 
 {

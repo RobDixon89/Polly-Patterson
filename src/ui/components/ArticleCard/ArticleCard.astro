@@ -1,5 +1,6 @@
 ---
 import type { ImageModel } from '../../types'
+import ArticleTag from '../ArticleTag/ArticleTag.astro'
 import Image from '../Image/Image.astro'
 
 // An article card. The whole card is one link (the title's, stretched over the card). `feature` makes it a wide card
@@ -7,6 +8,8 @@ import Image from '../Image/Image.astro'
 type Props = {
   title: string
   description?: string
+  /** The article's type tag, e.g. "article" (shown uppercase) */
+  type?: string
   href: string
   /** The link goes to another site */
   external?: boolean
@@ -22,7 +25,7 @@ type Props = {
   headingLevel?: 2 | 3
 }
 
-const { title, description, href, external, externalLabel, date, dateTime, image, feature = false, headingLevel = 2 } = Astro.props
+const { title, description, type, href, external, externalLabel, date, dateTime, image, feature = false, headingLevel = 2 } = Astro.props
 const Heading = `h${headingLevel}` as 'h2' | 'h3'
 ---
 
@@ -36,6 +39,7 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3'
       ))
   }
   <div class="body">
+    {type && <ArticleTag tag={type} />}
     {date && <time datetime={dateTime} class="date">{date}</time>}
     <Heading class="title">
       <a href={href} rel={external ? 'noopener' : undefined}>
@@ -113,6 +117,14 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3'
     @include body-sm;
     order: -1;
     color: var(--mutedColour);
+  }
+
+  // Above the date, like the inner hero's eyebrow
+  .type {
+    @include body-xs;
+    order: -2;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .title {

@@ -131,6 +131,10 @@ export const ctaModel = (
   }
 }
 
+/** A `ctas` field's blocks as `CtaModel`s, leaving out any without text or a link. */
+export const ctaModels = (blocks: Parameters<typeof ctaModel>[0][] | undefined, labels: Parameters<typeof ctaModel>[1]): CtaModel[] =>
+  (blocks ?? []).map((block) => ctaModel(block, labels)).filter((cta): cta is CtaModel => !!cta)
+
 /**
  * A `datetime()` field as an ISO date string. Storyblok saves it in UTC as `YYYY-MM-DD HH:mm`.
  * @returns The ISO string, or undefined when it's empty or not a date

@@ -1,17 +1,15 @@
 ---
 import type { StoryblokBlockComponentProps } from '@storyblok/astro'
-import ArticleCard from '../../../ui/components/ArticleCard/ArticleCard.astro'
+import ArticleListing from '../../../ui/components/ArticleListing/ArticleListing.astro'
 import InnerHero from '../../../ui/components/InnerHero/InnerHero.astro'
-import Pagination from '../../../ui/components/Pagination/Pagination.astro'
-import SectionWrapper from '../../../ui/components/SectionWrapper/SectionWrapper.astro'
 import type { BlockExtraProps } from '../../storyblok'
-import type { ArticleListing } from '../../types/gen/components/storyblok-components'
-import { imageModel } from '../../utils/blocks'
+import type { ArticleListing as ArticleListingModel } from '../../types/gen/components/storyblok-components'
+import { ctaModels, imageModel } from '../../utils/blocks'
 import { articleCard, listArticles } from '../../utils/stories'
 
 // The article listing: an inner hero from its own fields, then the articles in its folder, newest first, a page at
 // a time (`?page=2`).
-type Props = StoryblokBlockComponentProps<ArticleListing, BlockExtraProps>
+type Props = StoryblokBlockComponentProps<ArticleListingModel, BlockExtraProps>
 
 const { block, editable, url } = Astro.props
 const { t, version } = Astro.locals
@@ -30,61 +28,26 @@ const pageHref = (number: number) => {
   return `${target.pathname}${target.search}`
 }
 
-const cards = articles.map((story) => ({ key: story.uuid, ...articleCard(story) }))
+const externalLabel = t('article.external_label')
+const cards = articles.map((story) => ({ key: story.uuid, ...articleCard(story), externalLabel }))
 ---
 
 <div {...editable}>
-  <InnerHero title={block.title} description={block.description} backgroundImage={imageModel(block.image)} theme="dark" />
-  <SectionWrapper>
-    {
-      cards.length ? (
-        <ul class="grid">
-          {cards.map(({ key, ...card }) => (
-            <li>
-              <ArticleCard {...card} externalLabel={t('article.external_label')} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>{t('article.empty')}</p>
-      )
-    }
-    <Pagination
-      page={page}
-      hrefs={numbers.map(pageHref)}
-      pageLabels={numbers.map((number) => t('pagination.page', { page: number, pages }))}
-      label={t('pagination.label')}
-      previousLabel={t('pagination.previous')}
-      nextLabel={t('pagination.next')}
-    />
-  </SectionWrapper>
+  <InnerHero
+    title={block.title}
+    introduction={block.introduction}
+    ctas={ctaModels(block.ctas, { newTab: t('link.new_tab'), external: t('link.external') })}
+    backgroundImage={imageModel(block.image)}
+    theme="dark"
+  />
+  <ArticleListing
+    articles={cards}
+    emptyLabel={t('article.empty')}
+    page={page}
+    hrefs={numbers.map(pageHref)}
+    pageLabels={numbers.map((number) => t('pagination.page', { page: number, pages }))}
+    label={t('pagination.label')}
+    previousLabel={t('pagination.previous')}
+    nextLabel={t('pagination.next')}
+  />
 </div>
-
-<style lang="scss">
-  @use '@styles/functions/fluid' as *;
-  @use '@styles/functions/media' as *;
-
-  .grid {
-    display: grid;
-    gap: #{fluid(24, 32)};
-    margin: 0 0 #{fluid(32, 48)};
-    padding: 0;
-    list-style: none;
-
-    @include from($bp-tablet) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @include from($bp-tablet-large) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  li {
-    display: flex;
-
-    > :global(*) {
-      flex: 1;
-    }
-  }
-</style>

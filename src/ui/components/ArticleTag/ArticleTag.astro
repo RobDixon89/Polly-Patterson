@@ -1,0 +1,22 @@
+---
+type Props = { tag: string; }
+
+const { tag } = Astro.props
+---
+
+<p class="tag"><span>{tag}</span></p>
+
+<style lang="scss">
+  .tag {
+    background: var(--fgColour);
+    color: var(--bgColour);
+    padding: 0.15rem 0.3rem;
+    padding-block-end: 0;
+    border-radius: 3px;
+
+    :global(span) {
+      display: inline-block;
+      transform: translateY(3%);
+    }
+  }
+</style>

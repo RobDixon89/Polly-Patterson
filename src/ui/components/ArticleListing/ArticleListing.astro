@@ -1,0 +1,61 @@
+---
+import type { ComponentProps } from 'astro/types'
+import ArticleCard from '../ArticleCard/ArticleCard.astro'
+import Pagination from '../Pagination/Pagination.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// The article listing's grid: one page of article cards, then the pagination (`Pagination` props). Shows `emptyLabel`
+// when there are no articles.
+type Props = ComponentProps<typeof Pagination> & {
+  articles: Array<ComponentProps<typeof ArticleCard> & { key: string }>
+  emptyLabel: string
+}
+
+const { articles, emptyLabel, ...pagination } = Astro.props
+---
+
+<SectionWrapper>
+  {
+    articles.length ? (
+      <ul class="grid">
+        {articles.map(({ key, ...card }) => (
+          <li>
+            <ArticleCard {...card} />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>{emptyLabel}</p>
+    )
+  }
+  <Pagination {...pagination} />
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+
+  .grid {
+    display: grid;
+    gap: #{fluid(24, 32)};
+    margin: 0 0 #{fluid(32, 48)};
+    padding: 0;
+    list-style: none;
+
+    @include from($bp-tablet) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include from($bp-tablet-large) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  li {
+    display: flex;
+
+    > :global(*) {
+      flex: 1;
+    }
+  }
+</style>

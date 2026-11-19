@@ -30,6 +30,28 @@ const tiles = imageRowTiles(images.length)
   )
 }
 
+<script>
+  import { scroll } from 'motion'
+
+  // Overrides the section's `--viewProgress` for the row: 0 as its top enters the bottom of the viewport, 1 once its
+  // centre reaches the viewport's centre
+  const tracked = new WeakSet<Element>()
+  const track = () => {
+    for (const row of document.querySelectorAll<HTMLElement>('.image-row')) {
+      if (tracked.has(row)) continue
+      tracked.add(row)
+      scroll((value: number) => row.style.setProperty('--viewProgress', String(value)), {
+        target: row,
+        offset: ['start end', 'center center'],
+      })
+    }
+  }
+
+  track()
+  // Rows added by a Visual Editor live update
+  document.addEventListener('storyblok-live-preview-updated', track)
+</script>
+
 <style lang="scss">
   @use '@styles/functions/fluid' as *;
 

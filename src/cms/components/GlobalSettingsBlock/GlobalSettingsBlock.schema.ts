@@ -1,5 +1,5 @@
 import { defineComponentSchema } from '../../schema/define'
-import { link, navLinks, tab, text } from '../../schema/fields'
+import { blocks, navLinks, tab, text } from '../../schema/fields'
 
 // The site-wide header and footer, held in one story (`global/settings`) the layout loads for every page.
 export default defineComponentSchema({
@@ -20,13 +20,13 @@ export default defineComponentSchema({
       description: 'Links to the right of the logo. On mobile they follow the left links in the menu.',
       tooltip: true,
     }),
-    footer_tab: tab('Footer', ['footer_links', 'twitter_url', 'instagram_url', 'youtube_url', 'substack_url', 'bluesky_url', 'copyright']),
+    footer_tab: tab('Footer', ['footer_links', 'social_links', 'copyright']),
     footer_links: navLinks({ display_name: 'Links' }),
-    twitter_url: link({ display_name: 'Twitter URL' }),
-    instagram_url: link({ display_name: 'Instagram URL' }),
-    youtube_url: link({ display_name: 'YouTube URL' }),
-    substack_url: link({ display_name: 'Substack URL' }),
-    bluesky_url: link({ display_name: 'Bluesky URL' }),
+    social_links: blocks(['social_link'], {
+      display_name: 'Social Links',
+      description: 'Shown as icons, in this order. They open in a new tab.',
+      tooltip: true,
+    }),
     copyright: text({
       display_name: 'Copyright',
       description: '{year} is replaced with the current year, e.g. "© {year} Company Ltd".',

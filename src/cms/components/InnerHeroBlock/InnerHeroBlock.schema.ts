@@ -1,5 +1,5 @@
 import { defineComponentSchema } from '../../schema/define'
-import { richTextReduced, sectionFields, text } from '../../schema/fields'
+import { ctas, richTextReduced, sectionFields, text } from '../../schema/fields'
 
 export default defineComponentSchema({
   name: 'inner_hero',
@@ -9,6 +9,7 @@ export default defineComponentSchema({
   schema: {
     title: text({ display_name: 'Title', required: true }),
     introduction: richTextReduced({ display_name: 'Introduction' }),
+    ctas: ctas(2),
     ...sectionFields(),
   },
 })

@@ -1,5 +1,5 @@
 import { defineComponentSchema } from '../../schema/define'
-import { richTextReduced, sectionFields, sizedImage, text } from '../../schema/fields'
+import { ctas, richTextReduced, sectionFields, sizedImage, text } from '../../schema/fields'
 
 export default defineComponentSchema({
   name: 'home_hero',
@@ -10,6 +10,7 @@ export default defineComponentSchema({
     title: text({ display_name: 'Title', required: true }),
     introduction: richTextReduced({ display_name: 'Introduction' }),
     image: sizedImage([1600, 1600], { display_name: 'Image', required: true }),
+    ctas: ctas(2),
     ...sectionFields(),
   },
 })

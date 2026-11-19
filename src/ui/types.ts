@@ -46,3 +46,7 @@ export type CtaModel = LinkModel & {
   /** Screen reader text after the label when the link opens another site or a new tab, e.g. "(opens in a new tab)" */
   externalLabel?: string;
 };
+
+/** Social networks the footer has icons for; keys are the CMS option values */
+export const SOCIAL_NETWORKS = ['twitter', 'instagram', 'youtube', 'substack', 'bluesky'] as const;
+export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];

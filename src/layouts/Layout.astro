@@ -6,10 +6,10 @@ import { linkHref, linkModel } from '../cms/utils/blocks'
 import { getGlobalSettings } from '../cms/utils/stories'
 import { format } from '../cms/utils/strings'
 import BackgroundLayer from '../ui/components/BackgroundLayer/BackgroundLayer.astro'
-import SiteFooter, { type SocialNetwork } from '../ui/components/SiteFooter/SiteFooter.astro'
+import SiteFooter from '../ui/components/SiteFooter/SiteFooter.astro'
 import SiteHeader from '../ui/components/SiteHeader/SiteHeader.astro'
 import SkipLink from '../ui/components/SkipLink/SkipLink.astro'
-import type { ImageModel, LinkModel } from '../ui/types'
+import { SOCIAL_NETWORKS, type ImageModel, type LinkModel, type SocialNetwork } from '../ui/types'
 import '../styles/index.scss'
 
 type Props = {
@@ -35,11 +35,15 @@ const editable = ownSettings ? storyblokEditable(ownSettings as { _editable?: st
 const links = (items: GlobalSettings['footer_links']): LinkModel[] =>
   (items ?? []).map(linkModel).filter((link): link is LinkModel => !!link)
 
-const NETWORKS: SocialNetwork[] = ['twitter', 'instagram', 'youtube', 'substack', 'bluesky']
-const social = NETWORKS.flatMap((network) => {
-  const href = linkHref(settings?.[`${network}_url`])
-  return href ? [{ network, href, label: `${t(`social.${network}`)} ${t('link.new_tab')}` }] : []
+const socialLabel = (network: SocialNetwork) => `${t(`social.${network}`)} ${t('link.new_tab')}`
+// In the editor's order; links without an address or with an unknown network are left out
+const social = (settings?.social_links ?? []).flatMap(({ network, link }) => {
+  const href = linkHref(link)
+  if (!href || !SOCIAL_NETWORKS.includes(network)) return []
+  return [{ network, href, label: socialLabel(network) }]
 })
+// On the global settings story, every network's icon, so the footer can rebuild its links on a live update
+const socialTemplates = ownSettings ? SOCIAL_NETWORKS.map((network) => ({ network, label: socialLabel(network) })) : undefined
 
 const siteName = t('site.name')
 const pageTitle = title === siteName ? title : t('meta.title', { title, site: siteName })
@@ -83,6 +87,7 @@ const shareImage = image && `${image.src}/m/1200x630`
     <SiteFooter
       links={links(settings?.footer_links)}
       social={social}
+      socialTemplates={socialTemplates}
       copyright={settings?.copyright && format(settings.copyright, { year: new Date().getFullYear() })}
       navLabel={t('footer.nav_label')}
       socialLabel={t('footer.social_label')}

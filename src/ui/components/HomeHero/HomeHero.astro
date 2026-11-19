@@ -1,0 +1,78 @@
+---
+import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
+import type { BackgroundTint, CtaModel, ImageModel, SectionTheme } from '../../types'
+import Button from '../Button/Button.astro'
+import Image from '../Image/Image.astro'
+import RichText from '../RichText/RichText.astro'
+import SectionWrapper from '../SectionWrapper/SectionWrapper.astro'
+
+// The home page banner: the title, introduction and up to two CTAs beside a square image.
+type Props = {
+  title: string
+  introduction?: StoryblokRichtext
+  image?: ImageModel
+  ctas?: CtaModel[]
+  theme?: SectionTheme
+  backgroundImage?: ImageModel
+  backgroundTint?: BackgroundTint
+  id?: string
+  [attr: string]: unknown
+}
+
+const { title, introduction, image, ctas = [], theme, id, ...attrs } = Astro.props
+---
+
+<SectionWrapper as="header" id={id} theme={theme} eager {...attrs}>
+  <div class="grid">
+    <div>
+      <h1>{title}</h1>
+      <RichText document={introduction} class="introduction" />
+      {
+        ctas.length > 0 && (
+          <div class="ctas">
+            {ctas.slice(0, 2).map((cta) => (
+              <Button variant={cta.variant} href={cta.href} target={cta.target} externalLabel={cta.externalLabel}>
+                {cta.text}
+              </Button>
+            ))}
+          </div>
+        )
+      }
+    </div>
+    {image && <Image image={image} ratio={[1, 1]} sizes="(min-width: 768px) 50vw, 100vw" loading="eager" class="image" />}
+  </div>
+</SectionWrapper>
+
+<style lang="scss">
+  @use '@styles/functions/fluid' as *;
+  @use '@styles/functions/media' as *;
+  @use '@styles/mixins/typography' as *;
+
+  .grid {
+    display: grid;
+    gap: #{fluid(32, 64)};
+    align-items: center;
+
+    @include from($bp-tablet) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .grid :global(.introduction) {
+    @include body-lg;
+    margin-block-start: #{fluid(16, 32)};
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: #{fluid(24, 32)};
+  }
+
+  .grid :global(.image) {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+  }
+</style>

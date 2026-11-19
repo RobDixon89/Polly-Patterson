@@ -22,3 +22,14 @@ export default {
 }
 
 export const Default = {}
+
+// Editors order the social links (a blocks field); the footer keeps their order and leaves out networks with no link
+export const ReorderedSocial = {
+  args: {
+    social: [
+      { network: 'bluesky', href: 'https://bsky.app', label: 'Bluesky (opens in a new tab)' },
+      { network: 'youtube', href: 'https://www.youtube.com', label: 'YouTube (opens in a new tab)' },
+      { network: 'instagram', href: 'https://www.instagram.com', label: 'Instagram (opens in a new tab)' },
+    ],
+  },
+}

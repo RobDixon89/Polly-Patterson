@@ -7,6 +7,7 @@ export default {
   args: {
     title: 'An example article',
     description: 'This article has its own sections below the fixed banner.',
+    type: 'article',
     href: '/articles/example-article',
     date: '10 November 2026',
     dateTime: '2026-11-10T00:00:00Z',

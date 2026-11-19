@@ -18,7 +18,7 @@ export const apiClient = createApiClient({
 /** Extra props every block gets: the request's URL (for the article listing's page number and links). */
 export type BlockExtraProps = { url: URL }
 
-// One entry per block with an adapter, keyed by its technical name. `nav_link` (header and footer) and `image_row`
+// One entry per block with an adapter, keyed by its technical name. `nav_link` and `social_link` (header and footer) and `image_row`
 // (rich text) have none: what holds them renders them.
 export const { StoryblokBlock } = defineStoryblokBlocks<BlockExtraProps>(() => ({
   components: {

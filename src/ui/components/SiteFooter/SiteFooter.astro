@@ -1,20 +1,24 @@
 ---
-import type { LinkModel } from '../../types'
+import type { LinkModel, SocialNetwork } from '../../types';
 
-// The site footer: a link list, the social links and the copyright line.
-export type SocialNetwork = 'twitter' | 'instagram' | 'youtube' | 'substack' | 'bluesky'
+// The site footer: a link list, the social links (in the given order) and the copyright line.
 
 type Props = {
   links: LinkModel[]
   /** Each network's address and accessible name (say it opens in a new tab: they all do); networks without an address are left out */
   social: Array<{ network: SocialNetwork; href: string; label: string }>
+  /**
+   * Every network's icon and name, for rebuilding the social links after a Visual Editor live update. Only the global
+   * settings story passes them.
+   */
+  socialTemplates?: Array<{ network: SocialNetwork; label: string }>
   copyright?: string
   navLabel: string
   socialLabel: string
   [attr: string]: unknown
 }
 
-const { links, social, copyright, navLabel, socialLabel, ...attrs } = Astro.props
+const { links, social, socialTemplates = [], copyright, navLabel, socialLabel, ...attrs } = Astro.props
 
 // The icons, drawn in the text colour: line icons on a 24px grid, or filled brand marks on their own grid
 type Icon = { path: string; viewBox?: string; filled?: boolean }
@@ -31,6 +35,14 @@ const ICONS: Record<SocialNetwork, Icon> = {
   youtube: { path: PATHS.youtube },
   substack: { path: PATHS.substack, viewBox: '0 0 448 512', filled: true },
   bluesky: { path: PATHS.bluesky, viewBox: '0 0 600 530', filled: true },
+}
+// As HTML, so the list and the editor's templates share it
+const iconSvg = (network: SocialNetwork) => {
+  const { path, viewBox = '0 0 24 24', filled } = ICONS[network]
+  const paint = filled
+    ? 'fill="currentColor"'
+    : 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"'
+  return `<svg viewBox="${viewBox}" width="20" height="20" aria-hidden="true"><path d="${path}" ${paint} /></svg>`
 }
 ---
 
@@ -50,22 +62,29 @@ const ICONS: Record<SocialNetwork, Icon> = {
       )
     }
     {
-      social.length > 0 && (
+      (social.length > 0 || socialTemplates.length > 0) && (
         <ul class="social" aria-label={socialLabel}>
           {social.map(({ network, href, label }) => (
             <li>
               <a href={href} aria-label={label} target="_blank" rel="noopener">
-                <svg viewBox={ICONS[network].viewBox ?? '0 0 24 24'} width="20" height="20" aria-hidden="true">
-                  {ICONS[network].filled ? (
-                    <path d={ICONS[network].path} fill="currentColor" />
-                  ) : (
-                    <path d={ICONS[network].path} fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
-                  )}
-                </svg>
+                <Fragment set:html={iconSvg(network)} />
               </a>
             </li>
           ))}
         </ul>
+      )
+    }
+    {
+      socialTemplates.length > 0 && (
+        <template class="social-templates">
+          {socialTemplates.map(({ network, label }) => (
+            <li data-network={network}>
+              <a aria-label={label} target="_blank" rel="noopener">
+                <Fragment set:html={iconSvg(network)} />
+              </a>
+            </li>
+          ))}
+        </template>
       )
     }
     {copyright && <p class="copyright">{copyright}</p>}
