@@ -1,6 +1,8 @@
 // How a group of images is laid out and which sizes each one asks for, by how many there are. The crops make every
 // arrangement fill its frame; the widths cover each tile at 2x density (the site is at most 1280px wide).
 
+import { Device, from } from '../cms/utils/media'
+
 export type ImageTile = {
   /** The tile's crop, width / height */
   ratio: readonly [number, number]
@@ -14,8 +16,8 @@ export type ImageTile = {
 }
 
 // Split Content: the images share a square frame beside the text (half the site width from tablet up, full width below)
-const SPLIT_FULL = { sizes: '(min-width: 768px) 50vw, 100vw', minWidth: 480, maxWidth: 1280, steps: 4 }
-const SPLIT_HALF = { sizes: '(min-width: 768px) 25vw, 50vw', minWidth: 320, maxWidth: 640, steps: 3 }
+const SPLIT_FULL = { sizes: `${from(Device.Tablet)} 50vw, 100vw`, minWidth: 480, maxWidth: 1280, steps: 4 }
+const SPLIT_HALF = { sizes: `${from(Device.Tablet)} 25vw, 50vw`, minWidth: 320, maxWidth: 640, steps: 3 }
 
 /**
  * Split Content's tiles: one image fills the square; two share it side by side (each 1:2); three are two squares above

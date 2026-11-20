@@ -75,6 +75,8 @@ const hasLinks = leftLinks.length + rightLinks.length > 0
 </header>
 
 <script>
+  import { Device, from } from '../../../cms/utils/media'
+
   const header = document.querySelector<HTMLElement>('[data-site-header]')
   const toggle = header?.querySelector<HTMLButtonElement>('[data-menu-toggle]')
   const tray = header?.querySelector<HTMLElement>('#nav-tray')
@@ -104,7 +106,7 @@ const hasLinks = leftLinks.length + rightLinks.length > 0
       }
     })
     // The tray is mobile only: close it when the layout switches to the desktop bar
-    matchMedia('(min-width: 1024px)').addEventListener('change', (event) => event.matches && setOpen(false))
+    matchMedia(from(Device.TabletLarge)).addEventListener('change', (event) => event.matches && setOpen(false))
   }
 
   if (header) {

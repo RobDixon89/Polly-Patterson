@@ -1,5 +1,6 @@
 ---
 import type { ButtonVariant } from '../../types'
+import ExternalIcon from '../ExternalIcon/ExternalIcon.astro'
 
 // A button, or a link that looks like one: with `href` it's an <a>, otherwise a <button>. A link to another site, or
 // one that opens in a new tab, gets the external icon automatically; pass `externalLabel` so screen readers hear it too.
@@ -19,27 +20,12 @@ type Props = {
 const { variant = 'primary', href, target, type = 'button', externalLabel, class: className, ...attrs } = Astro.props
 const external = !!href && (target === '_blank' || /^(https?:)?\/\//.test(href))
 const Tag = href ? 'a' : 'button'
-const elementAttrs = href
-  ? { href, target, rel: external ? 'noopener' : undefined }
-  : { type }
+const elementAttrs = href ? { href, target, rel: external ? 'noopener' : undefined } : { type }
 ---
 
 <Tag class:list={['button', className]} data-variant={variant} {...elementAttrs} {...attrs}>
   <span class="label"><slot /></span>
-  {
-    external && (
-      <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-        <path
-          d="M10 4.5H7A2.5 2.5 0 0 0 4.5 7v10A2.5 2.5 0 0 0 7 19.5h10a2.5 2.5 0 0 0 2.5-2.5v-3M13 11l6.5-6.5M14 4.5h5.5V10"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
-    )
-  }
+  {external && <ExternalIcon class="icon" />}
   {external && externalLabel && <span class="sr-only">{externalLabel}</span>}
 </Tag>
 
@@ -64,6 +50,12 @@ const elementAttrs = href
     border-radius: var(--buttonBorderRadius, 999px);
     cursor: pointer;
 
+    @include hover-focus {
+      :global(.arrow) {
+        transform: translate(3px, -3px);
+      }
+    }
+
     // Filled in the text colour, so it's always the opposite of the section's background
     &[data-variant='primary'] {
       color: var(--bgColour);
@@ -84,7 +76,7 @@ const elementAttrs = href
     &[data-variant='primary'],
     &[data-variant='outline'] {
       .label {
-        transform: translateY(5%);
+        transform: translateY(7.5%);
       }
 
       @include hover-focus {
@@ -111,7 +103,7 @@ const elementAttrs = href
     }
   }
 
-  .icon {
+  .button :global(.icon) {
     flex-shrink: 0;
   }
 </style>

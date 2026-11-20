@@ -1,6 +1,8 @@
 ---
+import { Device, from } from '../../../cms/utils/media'
 import type { ImageModel } from '../../types'
 import ArticleTag from '../ArticleTag/ArticleTag.astro'
+import ExternalIcon from '../ExternalIcon/ExternalIcon.astro'
 import Image from '../Image/Image.astro'
 
 // An article card. The whole card is one link (the title's, stretched over the card). `feature` makes it a wide card
@@ -25,7 +27,19 @@ type Props = {
   headingLevel?: 2 | 3
 }
 
-const { title, description, type, href, external, externalLabel, date, dateTime, image, feature = false, headingLevel = 2 } = Astro.props
+const {
+  title,
+  description,
+  type,
+  href,
+  external,
+  externalLabel,
+  date,
+  dateTime,
+  image,
+  feature = false,
+  headingLevel = 2,
+} = Astro.props
 const Heading = `h${headingLevel}` as 'h2' | 'h3'
 ---
 
@@ -33,23 +47,51 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3'
   {
     image &&
       (feature ? (
-        <Image image={image} ratio={[16, 9]} sizes="(min-width: 768px) 60vw, 100vw" minWidth={480} maxWidth={1600} steps={4} class="image" />
+        <Image
+          image={image}
+          ratio={[16, 9]}
+          sizes={`${from(Device.Tablet)} 60vw, 100vw`}
+          minWidth={480}
+          maxWidth={1600}
+          steps={4}
+          class="image"
+        />
       ) : (
-        <Image image={image} ratio={[3, 2]} sizes="(min-width: 768px) 33vw, 100vw" minWidth={400} maxWidth={1200} steps={4} class="image" />
+        <Image
+          image={image}
+          ratio={[3, 2]}
+          sizes={`${from(Device.Tablet)} 33vw, 100vw`}
+          minWidth={400}
+          maxWidth={1200}
+          steps={4}
+          class="image"
+        />
       ))
   }
-  <div class="body">
-    {type && <ArticleTag tag={type} />}
-    {date && <time datetime={dateTime} class="date">{date}</time>}
+  <a href={href} rel={external ? 'noopener' : undefined}>
+    {
+      date && (
+        <time datetime={dateTime} class="date">
+          <span>{date}</span>
+        </time>
+      )
+    }
+
     <Heading class="title">
-      <a href={href} rel={external ? 'noopener' : undefined}>
-        {title}
-        {external && <span class="external" aria-hidden="true">↗</span>}
-        {external && externalLabel && <span class="sr-only">{externalLabel}</span>}
-      </a>
+      {title}
     </Heading>
     {description && <p class="description">{description}</p>}
-  </div>
+
+    {
+      external && (
+        <span class="external">
+          <ExternalIcon />
+          {externalLabel && <span class="sr-only">{externalLabel}</span>}
+        </span>
+      )
+    }
+    {type && <ArticleTag tag={type} />}
+  </a>
 </article>
 
 <style lang="scss">
@@ -57,106 +99,173 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3'
   @use '@styles/functions/fluid' as *;
   @use '@styles/functions/media' as *;
   @use '@styles/mixins/typography' as *;
+  @use '@styles/fonts/font-variables' as *;
 
   .card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--borderColour);
+    @include transition('all', 0.5s);
 
-    // The card is one link: hovering anywhere on it, or focusing its link from the keyboard, underlines the title
-    @media (hover: hover) and (pointer: fine) {
-      &:hover .title a {
-        text-decoration-color: currentColor;
+    --acPadding: #{fluid(8, 12)};
+
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    grid-template-rows: min-content 1fr min-content min-content;
+    inline-size: 100%;
+
+    a {
+      text-decoration: none;
+      grid-area: 1 / 1 / -1 / -1;
+      display: grid;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+      inline-size: 100%;
+      block-size: 100%;
+      padding: var(--acPadding);
+
+      @include hover-focus {
+        .title {
+          @include h5;
+        }
+
+        @include from($bp-tablet-large) {
+          .date {
+            opacity: 1;
+          }
+        }
+
+        :global(.arrow) {
+          transform: translate(3px, -3px);
+        }
       }
     }
 
     &:has(a:focus-visible) {
       outline: 2px solid currentColor;
       outline-offset: 2px;
-
-      .title a {
-        text-decoration-color: currentColor;
-      }
     }
   }
 
   .card :global(.image) {
+    grid-row: 1 / span 3;
+    grid-column: 1 / -1;
     inline-size: 100%;
-    block-size: auto;
-    aspect-ratio: 3 / 2;
+    block-size: 100%;
+    border-radius: calc(var(--imageBorderRadius) * var(--radiusMultiplier, 1));
+    aspect-ratio: var(--acRatio, 5 / 4);
   }
 
-  // The feature card: image (60%) beside the text from tablet width up, a larger title
+  // Row cards: the image fills the card's height instead of setting it, so cards in a row match and stay short
+  .card:not(.feature) :global(.image) {
+    @include from($bp-tablet-small) {
+      block-size: 100%;
+      contain: size;
+    }
+  }
+
   .feature {
     @include from($bp-tablet) {
-      display: grid;
-      grid-template-columns: 3fr 2fr;
-      align-items: center;
-    }
+      --acPadding: #{fluid(12, 16)};
+      --acRatio: 8 / 3;
+      --dateMargin: #{fluid(4, 6)};
+      --radiusMultiplier: 1.25;
+      --radiusMultiplierBody: 1;
+      --titlePadding: #{fluid(16, 24)};
 
-    :global(.image) {
-      aspect-ratio: 16 / 9;
-      block-size: 100%;
-      object-fit: cover;
-    }
+      .title {
+        @include h5;
+      }
 
-    .title {
-      @include h3;
+      .description {
+        @include body;
+      }
+
+      a {
+        @include hover-focus {
+          .title {
+            @include h4;
+          }
+        }
+      }
     }
   }
 
-  .body {
-    display: flex;
-    flex-direction: column;
-    gap: #{fluid(8, 12)};
-    padding: #{fluid(16, 24)};
+  .external,
+  .date,
+  .card :global(.tag) {
+    background-color: color-mix(in srgb, var(--fgColour) 85%, transparent);
+  }
+
+  .external,
+  .date {
+    color: var(--bgColour);
+    padding: 0.2rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  .card :global(.tag) {
+    grid-row: 1;
+    grid-column: 2;
+    margin-block-end: auto;
+    margin-inline-start: auto;
+  }
+
+  .card:not(.feature) :global(.tag) {
+    @include body-sm;
+  }
+
+  .external {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: 6px;
+    grid-column: 3;
+
+    svg {
+      inline-size: 1em;
+      block-size: 1em;
+    }
   }
 
   .date {
     @include body-sm;
-    order: -1;
-    color: var(--mutedColour);
-  }
+    @include transition('opacity', 0.5s);
 
-  // Above the date, like the inner hero's eyebrow
-  .type {
-    @include body-xs;
-    order: -2;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    grid-row: 2;
+    padding-block-end: 0;
+    margin-block: auto var(--dateMargin, 4px);
+    font-weight: $font-weight-medium;
+    margin-inline-end: auto;
 
-  .title {
-    @include h5;
+    :global(span) {
+      display: inline-block;
+      transform: translateY(3%);
+    }
 
-    a {
-      @include transition(text-decoration-color, 0.2s);
-      text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 4px;
-      text-decoration-color: transparent;
-
-      // The link covers the card
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-      }
-
-      &:focus-visible {
-        outline: none;
-      }
+    @include from($bp-tablet-large) {
+      opacity: 0;
     }
   }
 
-  .external {
-    font-family: system-ui, sans-serif;
-    font-size: 0.6em;
-    vertical-align: super;
+  .title {
+    @include h6;
+    @include transition('font-size', 0.5s);
+
+    padding: var(--titlePadding, fluid(12, 16));
+    background-color: var(--bgColour);
+    grid-row: 3;
+    grid-column: 1 / -1;
+    border-radius: calc(var(--imageBorderRadius) * var(--radiusMultiplierBody, 0.85));
+    margin-block: auto var(--acPadding);
+    margin-inline-end: auto;
   }
 
   .description {
-    @include body;
+    @include body-sm;
+
+    line-height: 1.2;
+    color: var(--fgColour);
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin-inline: calc(var(--acPadding) * -1);
+    margin-block-start: calc(var(--acPadding) * 0.75);
   }
 </style>

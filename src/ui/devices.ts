@@ -2,6 +2,8 @@
 // shape around the editor's focal point and asks for widths that cover that screen at its usual pixel density.
 // Media queries match the breakpoints in styles/functions/_media.scss ($bp-tablet, $bp-desktop-small).
 
+import { Device, until } from '../cms/utils/media'
+
 export type ImageSource = {
   /** When the browser uses this source; the last source is the fallback, so it has none */
   media?: string
@@ -17,9 +19,9 @@ export type ImageSource = {
 
 export const DEVICES = {
   // Portrait phones, up to 430px wide at 3x
-  mobile: { media: '(max-width: 767px)', ratio: [9, 16], minWidth: 480, maxWidth: 1290, steps: 4 },
+  mobile: { media: until(Device.Tablet), ratio: [9, 16], minWidth: 480, maxWidth: 1290, steps: 4 },
   // Tablets in either orientation, up to 1024px wide at 2x; a portrait crop still covers a landscape screen
-  tablet: { media: '(max-width: 1279px)', ratio: [3, 4], minWidth: 768, maxWidth: 2048, steps: 4 },
+  tablet: { media: until(Device.DesktopSmall), ratio: [3, 4], minWidth: 768, maxWidth: 2048, steps: 4 },
   // Laptops and desktops, up to 1440px wide at 2x
   desktop: { ratio: [16, 9], minWidth: 1280, maxWidth: 2880, steps: 5 },
 } as const satisfies Record<string, ImageSource>

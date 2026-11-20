@@ -19,6 +19,3 @@ export default {
 export const Light = {}
 
 export const Dark = { args: { theme: 'dark' } }
-
-// With fewer articles the row is shorter
-export const TwoArticles = { args: { articles: articleCards.slice(0, 2) } }

@@ -1,5 +1,5 @@
-import { articleImage } from '../../fixtures'
-import ArticleCard from './ArticleCard.astro'
+import { articleImage } from '../../fixtures';
+import ArticleCard from './ArticleCard.astro';
 
 export default {
   title: 'Components/Article Card',
@@ -14,10 +14,16 @@ export default {
     image: articleImage,
   },
   parameters: { layout: 'padded' },
-}
+};
 
-export const Default = {}
+export const Default = {};
 
 export const External = {
-  args: { href: 'https://www.storyblok.com/docs', external: true, externalLabel: '(opens another site)' },
-}
+  args: {
+    href: 'https://www.storyblok.com/docs',
+    external: true,
+    externalLabel: '(opens another site)',
+  },
+};
+
+export const Featured = { args: { feature: true } };

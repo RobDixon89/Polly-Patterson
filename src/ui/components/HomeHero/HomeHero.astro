@@ -1,6 +1,7 @@
 ---
 import type { StoryblokRichtext } from '../../../cms/types/gen/storyblok'
 import type { BackgroundTint, CtaModel, ImageModel, SectionTheme } from '../../types'
+import { Device, from } from '../../../cms/utils/media'
 import Button from '../Button/Button.astro'
 import Image from '../Image/Image.astro'
 import RichText from '../RichText/RichText.astro'
@@ -39,7 +40,7 @@ const { title, introduction, image, ctas = [], theme, id, ...attrs } = Astro.pro
         )
       }
     </div>
-    {image && <Image image={image} ratio={[1, 1]} sizes="(min-width: 768px) 50vw, 100vw" loading="eager" class="image" />}
+    {image && <Image image={image} ratio={[1, 1]} sizes={`${from(Device.Tablet)} 50vw, 100vw`} loading="eager" class="image" />}
   </div>
 </SectionWrapper>
 

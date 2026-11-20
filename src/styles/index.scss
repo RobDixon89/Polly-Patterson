@@ -13,6 +13,7 @@
     --sectionSpacing: #{fluid(48, 96)};
     // The sticky header's height; sections keep anchor targets clear of it
     --headerHeight: #{fluid(64, 88)};
+    --imageBorderRadius: #{fluid(6, 10)};
   }
 
   *,
@@ -36,7 +37,8 @@
     flex-direction: column;
   }
 
-  main {
+  main,
+  #storybook-root {
     flex: 1;
     // Breakpoint mixins (functions/_media.scss) are container queries against this. Not on <body>: a container is
     // the containing block for fixed descendants, which would pin the header's overlay and tray to the page.
@@ -67,12 +69,24 @@
     margin: 0;
   }
 
-  h1 { @include h1; }
-  h2 { @include h2; }
-  h3 { @include h3; }
-  h4 { @include h4; }
-  h5 { @include h5; }
-  h6 { @include h6; }
+  h1 {
+    @include h1;
+  }
+  h2 {
+    @include h2;
+  }
+  h3 {
+    @include h3;
+  }
+  h4 {
+    @include h4;
+  }
+  h5 {
+    @include h5;
+  }
+  h6 {
+    @include h6;
+  }
 
   img,
   svg {

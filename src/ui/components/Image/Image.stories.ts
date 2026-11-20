@@ -1,3 +1,4 @@
+import { Device, from } from '../../../cms/utils/media'
 import { DEVICES, FULL_SCREEN_SOURCES } from '../../devices'
 import { storyblokWideImage, wideImage } from '../../fixtures'
 import Image from './Image.astro'
@@ -18,7 +19,7 @@ export const Default = {}
 export const Ratio = { args: { ratio: [1, 1], sizes: '400px' } }
 
 // A card-sized image: four widths from 400 to 1200
-export const CustomWidths = { args: { minWidth: 400, maxWidth: 1200, steps: 4, sizes: '(min-width: 768px) 33vw, 100vw' } }
+export const CustomWidths = { args: { minWidth: 400, maxWidth: 1200, steps: 4, sizes: `${from(Device.Tablet)} 33vw, 100vw` } }
 
 // A single width
 export const OneWidth = { args: { minWidth: 800, maxWidth: 800, steps: 1, sizes: '800px' } }

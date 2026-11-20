@@ -18,17 +18,25 @@ const { page, hrefs, pageLabels, label, previousLabel, nextLabel } = Astro.props
 {
   hrefs.length > 1 && (
     <nav aria-label={label} class="pagination">
-      {page > 1 && <a href={hrefs[page - 2]} rel="prev">{previousLabel}</a>}
+      {page > 1 && (
+        <a href={hrefs[page - 2]} rel="prev">
+          <span>{previousLabel}</span>
+        </a>
+      )}
       <ol>
         {hrefs.map((href, index) => (
           <li>
             <a href={href} aria-current={index + 1 === page ? 'page' : undefined} aria-label={pageLabels[index]}>
-              {index + 1}
+              <span>{index + 1}</span>
             </a>
           </li>
         ))}
       </ol>
-      {page < hrefs.length && <a href={hrefs[page]} rel="next">{nextLabel}</a>}
+      {page < hrefs.length && (
+        <a href={hrefs[page]} rel="next">
+          <span>{nextLabel}</span>
+        </a>
+      )}
     </nav>
   )
 }
@@ -48,6 +56,11 @@ const { page, hrefs, pageLabels, label, previousLabel, nextLabel } = Astro.props
     // Previous and next
     > a {
       @include link-styles;
+    }
+
+    span {
+      display: block;
+      transform: translateY(7.5%);
     }
   }
 
