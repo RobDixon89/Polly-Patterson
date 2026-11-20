@@ -12,15 +12,18 @@ type Props = ComponentProps<typeof Pagination> & {
 }
 
 const { articles, emptyLabel, ...pagination } = Astro.props
+
+const gridLayout = pagination.page === 1 ? 'first' : pagination.page % 2 === 0 ? 'even' : 'odd'
 ---
 
 <SectionWrapper>
   {
     articles.length ? (
-      <ul class="grid">
-        {articles.map(({ key, ...card }) => (
+      <ul class="grid" data-layout={gridLayout}>
+        {articles.map(({ key, ...card }, i) => (
           <li>
-            <ArticleCard {...card} />
+            {i + 1}
+            <ArticleCard {...card} feature={gridLayout === 'first' && i === 0} />
           </li>
         ))}
       </ul>
@@ -36,26 +39,70 @@ const { articles, emptyLabel, ...pagination } = Astro.props
   @use '@styles/functions/media' as *;
 
   .grid {
+    --gridGap: #{fluid(16, 24)};
+
     display: grid;
-    gap: #{fluid(24, 32)};
+    gap: var(--gridGap);
     margin: 0 0 #{fluid(32, 48)};
     padding: 0;
     list-style: none;
 
     @include from($bp-tablet) {
       grid-template-columns: repeat(2, 1fr);
+
+      &[data-layout='first'] {
+        li:nth-child(1) {
+          grid-column: 1 / -1;
+        }
+      }
     }
 
     @include from($bp-tablet-large) {
       grid-template-columns: repeat(3, 1fr);
+      row-gap: 0;
+
+      li {
+        grid-row: span 4;
+        padding-block-end: var(--gridGap);
+      }
+
+      &[data-layout='first'] {
+        li {
+          &:nth-child(1),
+          &:nth-child(3),
+          &:nth-child(5),
+          &:nth-child(6),
+          &:nth-child(8) {
+            grid-row: span 3;
+          }
+
+          &:nth-child(4),
+          &:nth-child(9) {
+            grid-row: span 2;
+          }
+        }
+      }
+
+      &[data-layout='even'] {
+        li {
+          &:nth-child(1),
+          &:nth-child(3),
+          &:nth-child(5),
+          &:nth-child(6),
+          &:nth-child(8) {
+            grid-row: span 3;
+          }
+
+          &:nth-child(4),
+          &:nth-child(9) {
+            grid-row: span 2;
+          }
+        }
+      }
     }
   }
 
   li {
     display: flex;
-
-    > :global(*) {
-      flex: 1;
-    }
   }
 </style>
